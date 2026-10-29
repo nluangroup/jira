@@ -28,6 +28,15 @@ public sealed partial class GitWorkspace(IOptions<QueueOptions> options, ILogger
     }
 
     /// <inheritdoc />
+    public async Task<bool> RemoteBranchExistsAsync(string repo, string branch, CancellationToken ct)
+    {
+        var runs = options.Value.RunsDirectory;
+        Directory.CreateDirectory(runs);
+        var output = await GitAsync(runs, ct, "ls-remote", "--heads", CloneUrl(repo), $"refs/heads/{branch}");
+        return output.Trim().Length > 0;
+    }
+
+    /// <inheritdoc />
     public async Task<string> HeadShaAsync(string workDir, CancellationToken ct) =>
         (await GitAsync(workDir, ct, "rev-parse", "HEAD")).Trim();
 

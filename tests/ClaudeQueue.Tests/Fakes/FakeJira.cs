@@ -17,6 +17,9 @@ public sealed class FakeJira : IJira
     /// <summary>When true, <see cref="CommentAsync"/> throws.</summary>
     public bool FailComments { get; set; }
 
+    /// <summary>When set, transitions to this status throw.</summary>
+    public string? FailTransitionTo { get; set; }
+
     /// <inheritdoc />
     public Task<JiraCard?> GetNextReadyAsync(CancellationToken ct) =>
         Task.FromResult(Ready.Count > 0 ? Ready.Dequeue() : null);
@@ -24,6 +27,7 @@ public sealed class FakeJira : IJira
     /// <inheritdoc />
     public Task TransitionAsync(string cardKey, string statusName, CancellationToken ct)
     {
+        if (statusName == FailTransitionTo) throw new HttpRequestException("jira down");
         Transitions.Add((cardKey, statusName));
         return Task.CompletedTask;
     }

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UserSecretsId>dotnet-ClaudeQueue-8cb5e65c-5fc5-4a12-8bff-c0474ba054dd</UserSecretsId>
   </PropertyGroup>
 

@@ -12,6 +12,12 @@ public interface IWorkspace
     /// <returns>The working directory.</returns>
     Task<string> PrepareAsync(PlanReference plan, string branch, CancellationToken ct);
 
+    /// <summary>Checks whether <paramref name="branch"/> exists on the remote of <paramref name="repo"/>, without cloning.</summary>
+    /// <param name="repo">Repository in owner/name form.</param>
+    /// <param name="branch">Branch name.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<bool> RemoteBranchExistsAsync(string repo, string branch, CancellationToken ct);
+
     /// <summary>Returns the full SHA of HEAD.</summary>
     /// <param name="workDir">Working directory.</param>
     /// <param name="ct">Cancellation token.</param>

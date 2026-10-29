@@ -25,9 +25,20 @@ public sealed class FakeWorkspace(IEnumerable<string>? heads = null) : IWorkspac
     /// <summary>Value returned by <see cref="CommitsSinceAsync"/>.</summary>
     public int Commits { get; set; }
 
+    /// <summary>When set, <see cref="PrepareAsync"/> throws it.</summary>
+    public Exception? ThrowOnPrepare { get; set; }
+
+    /// <summary>Branches reported as existing on the remote.</summary>
+    public HashSet<string> RemoteBranches { get; } = [];
+
+    /// <inheritdoc />
+    public Task<bool> RemoteBranchExistsAsync(string repo, string branch, CancellationToken ct) =>
+        Task.FromResult(RemoteBranches.Contains(branch));
+
     /// <inheritdoc />
     public Task<string> PrepareAsync(PlanReference plan, string branch, CancellationToken ct)
     {
+        if (ThrowOnPrepare is not null) throw ThrowOnPrepare;
         Prepared.Add((plan, branch));
         return Task.FromResult(WorkDir);
     }

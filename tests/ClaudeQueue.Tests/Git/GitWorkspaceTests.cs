@@ -79,6 +79,15 @@ public sealed class GitWorkspaceTests : IAsyncLifetime
         Assert.Contains("git push", ex.Message);
     }
 
+    [Fact] public async Task GitWorkspace_RemoteBranchExists_true_after_push_false_before()
+    {
+        Assert.False(await _ws.RemoteBranchExistsAsync("x/y", "plan/SCRUM-1-x", default));
+        var dir = await _ws.PrepareAsync(new PlanReference("x/y", "p.md", _shaA), "plan/SCRUM-1-x", default);
+        await Git(dir, "commit", "--allow-empty", "-m", "1");
+        await _ws.PushAsync(dir, "plan/SCRUM-1-x", default);
+        Assert.True(await _ws.RemoteBranchExistsAsync("x/y", "plan/SCRUM-1-x", default));
+    }
+
     [Fact] public async Task Prepare_with_unknown_sha_throws_with_git_stderr() =>
         Assert.Contains("git checkout", (await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _ws.PrepareAsync(new PlanReference("x/y", "p.md", new string('f', 40)), "b", default))).Message);
