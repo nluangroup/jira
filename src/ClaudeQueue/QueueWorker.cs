@@ -32,7 +32,7 @@ public sealed partial class QueueWorker(IJira jira, PlanRunner runner, IOptions<
             catch (Exception ex) when (ex is not OperationCanceledException || !stoppingToken.IsCancellationRequested)
             {
                 wait = true;
-                LogLoopFailed(logger, ex.ToString());
+                LogLoopFailed(logger, ex);
             }
 
             if (!wait) continue;
@@ -53,6 +53,6 @@ public sealed partial class QueueWorker(IJira jira, PlanRunner runner, IOptions<
     [LoggerMessage(Level = LogLevel.Information, Message = "Picked up {Key}: {Summary}")]
     private static partial void LogPickedUp(ILogger logger, string key, string summary);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Queue loop failed, retrying after the poll interval: {Details}")]
-    private static partial void LogLoopFailed(ILogger logger, string details);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Queue loop failed, retrying after the poll interval")]
+    private static partial void LogLoopFailed(ILogger logger, Exception ex);
 }

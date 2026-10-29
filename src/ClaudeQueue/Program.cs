@@ -15,7 +15,9 @@ builder.Services.Configure<QueueOptions>(builder.Configuration.GetSection(QueueO
 builder.Services.PostConfigure<QueueOptions>(o =>
     o.RunsDirectory = Environment.ExpandEnvironmentVariables(o.RunsDirectory));
 
-builder.Services.AddHttpClient<IJira, JiraClient>().AddStandardResilienceHandler();
+builder.Services.AddHttpClient<IJira, JiraClient>()
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) })
+    .AddStandardResilienceHandler();
 builder.Services.AddQueueServices();
 
 var host = builder.Build();
