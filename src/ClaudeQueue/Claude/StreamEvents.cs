@@ -49,14 +49,6 @@ public static class StreamEventParser
         {
             return null;
         }
-        catch (FormatException)
-        {
-            return null;
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
     }
 
     /// <summary>Renders an event for the console.</summary>
@@ -113,7 +105,8 @@ public static class StreamEventParser
     private static RunFinished ParseResult(JsonElement root)
     {
         var isError = root.TryGetProperty("is_error", out var err) && err.ValueKind == JsonValueKind.True;
-        decimal? cost = root.TryGetProperty("total_cost_usd", out var c) ? c.GetDecimal() : null;
+        decimal? cost = root.TryGetProperty("total_cost_usd", out var c)
+            && c.ValueKind == JsonValueKind.Number && c.TryGetDecimal(out var d) ? d : null;
         return new RunFinished(isError, cost, Str(root, "result"));
     }
 

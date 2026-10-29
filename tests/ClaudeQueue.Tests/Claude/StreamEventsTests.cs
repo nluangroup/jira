@@ -31,6 +31,13 @@ public class StreamEventsTests
     [Fact] public void Result_line_with_missing_fields_uses_defaults() =>
         Assert.Equal(new RunFinished(false, null, null), StreamEventParser.Parse("""{"type":"result"}"""));
 
+    [Theory]
+    [InlineData("""{"type":"result","total_cost_usd":"x","result":"ok"}""")]
+    [InlineData("""{"type":"result","total_cost_usd":null,"result":"ok"}""")]
+    [InlineData("""{"type":"result","total_cost_usd":1e999,"result":"ok"}""")]
+    public void Non_numeric_cost_degrades_to_null_but_keeps_the_result(string line) =>
+        Assert.Equal(new RunFinished(false, null, "ok"), StreamEventParser.Parse(line));
+
     [Fact] public void Error_result_is_flagged() =>
         Assert.Equal(new RunFinished(true, null, null), StreamEventParser.Parse("""{"type":"result","is_error":true}"""));
 
@@ -43,7 +50,6 @@ public class StreamEventsTests
     [InlineData("""{"type":"assistant","message":{"content":"text"}}""")]
     [InlineData("""{"type":"assistant","message":{"content":[5,null]}}""")]
     [InlineData("""[1,2]""")]
-    [InlineData("""{"type":"result","total_cost_usd":"x"}""")]
     public void Unknown_or_bad_lines_are_ignored(string line) => Assert.Null(StreamEventParser.Parse(line));
 
     [Fact] public void Console_line_for_subagent() =>
