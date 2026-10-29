@@ -61,7 +61,7 @@ public class PwshVerifierTests
         try
         {
             await File.WriteAllTextAsync(Path.Combine(dir, "verify.ps1"), "Write-Output 'started'; Start-Sleep -Seconds 60");
-            var options = Options.Create(new QueueOptions { VerifyTimeout = TimeSpan.FromSeconds(2) });
+            var options = Options.Create(new QueueOptions { VerifyTimeout = TimeSpan.FromSeconds(10) });
             var r = await new PwshVerifier(options).RunAsync(dir, default);
             Assert.False(r.Passed);
             Assert.Equal("verify timed out after 0m", r.Detail);
