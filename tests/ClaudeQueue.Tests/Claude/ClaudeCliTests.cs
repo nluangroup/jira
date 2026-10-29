@@ -24,10 +24,15 @@ public class ClaudeCliTests
         return dir;
     }
 
+    private static readonly string[] Head = ["-p", "PROMPT", "--output-format", "stream-json", "--verbose", "--permission-mode", "dontAsk", "--max-budget-usd", "5"];
+
     [Fact] public void Args_match_spec() =>
-        Assert.Equal(["-p", "PROMPT", "--output-format", "stream-json", "--verbose", "--permission-mode", "dontAsk",
-                      "--max-budget-usd", "5", "--disallowedTools", "Bash(git push:*)"],
-            ClaudeCli.BuildArgs("PROMPT", 5m));
+        Assert.Equal([.. Head, "--allowedTools", "Bash(dotnet:*)", "Read", "--disallowedTools", "Bash(rm:*)", "Bash(git push:*)"],
+            ClaudeCli.BuildArgs("PROMPT", 5m, new HeadlessPermissions(["Bash(dotnet:*)", "Read"], ["Bash(rm:*)", "Bash(git push:*)"], null)));
+
+    [Fact] public void Empty_allow_omits_allowedTools_flag() =>
+        Assert.Equal([.. Head, "--disallowedTools", "Bash(git push:*)"],
+            ClaudeCli.BuildArgs("PROMPT", 5m, new HeadlessPermissions([], ["Bash(git push:*)"], null)));
 
     [Fact] public async Task Success_stream_yields_events_cost_and_final_message()
     {

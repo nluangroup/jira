@@ -47,6 +47,10 @@ Drag a card to Ready for Claude; it is picked up within a few seconds.
 
 Test counts in the report are read from `dotnet test` and Vitest summary lines in the `verify.ps1` output.
 
+## Permissions
+
+Claude runs headless in a fresh clone, where Claude Code ignores the repo's `.claude/settings.json` permissions. The service therefore reads that file's `permissions.allow` / `permissions.deny` lists and passes them on the `claude` command line (`--allowedTools` / `--disallowedTools`), so they apply in untrusted clones. It always adds fixed blocks for `git push` and for editing the plan docs (`docs/superpowers`), `.claude/`, `verify.ps1` and `tools/smoke.mjs`. If the settings file is missing or unreadable, the report notes it.
+
 ## Logs
 
 Run files land in `RunsDirectory` (default `%LOCALAPPDATA%\ClaudeQueue\runs`): one clone directory per run, with `<run>-claude.jsonl` (Claude's event stream) and `<run>-verify.log` siblings.

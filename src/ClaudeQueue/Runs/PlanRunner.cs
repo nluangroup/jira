@@ -142,6 +142,7 @@ public sealed partial class PlanRunner(
         var result = await RunClaudeWithProgressAsync(card.Key, workDir, branch, titles, RunPrompt.Build(plan, o.ExecutionMode), ct);
         s.Claude = result;
         s.CostUsd = result.CostUsd;
+        if (result.PermissionsWarning is not null) s.Notes.Add(result.PermissionsWarning);
         s.Rulings = ReportBuilder.ExtractRulings(result.FinalMessage);
         s.Outcome = OutcomeOf(s);
 

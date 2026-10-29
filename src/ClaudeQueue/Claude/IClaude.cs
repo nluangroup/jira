@@ -17,7 +17,11 @@ public enum ClaudeExit
 /// <param name="Exit">How the run ended.</param>
 /// <param name="CostUsd">Total cost in USD, when reported.</param>
 /// <param name="FinalMessage">Claude's final result text, when reported.</param>
-public sealed record ClaudeResult(ClaudeExit Exit, decimal? CostUsd, string? FinalMessage);
+public sealed record ClaudeResult(ClaudeExit Exit, decimal? CostUsd, string? FinalMessage)
+{
+    /// <summary>Set when the repo's <c>.claude/settings.json</c> could not be used and only the service's fixed blocks applied.</summary>
+    public string? PermissionsWarning { get; init; }
+}
 
 /// <summary>Runs Claude headlessly against a working copy.</summary>
 public interface IClaude

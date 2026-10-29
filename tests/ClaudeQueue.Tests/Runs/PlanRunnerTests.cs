@@ -53,6 +53,14 @@ public sealed class PlanRunnerTests : IDisposable
         Assert.Contains(PlanPath, f.Claude.Prompts.Single());
     }
 
+    [Fact] public async Task Permissions_warning_lands_in_report()
+    {
+        var f = Fixture();
+        f.Claude.Result = f.Claude.Result with { PermissionsWarning = "No .claude/settings.json in the repo" };
+        await Run(f);
+        Assert.Contains("No .claude/settings.json in the repo", f.Jira.Comments.Last().Text);
+    }
+
     [Fact] public async Task Verify_failure_gives_draft_pr() { var f = Fixture(ClaudeExit.Succeeded, verifyPassed: false, commits: 2); await Run(f); Assert.True(f.Prs.Created.Single().Draft); Assert.StartsWith("⚠️ Verification failed", f.Jira.Comments.Last().Text); }
     [Fact] public async Task Timeout_still_gets_draft_pr_from_existing_commits() { var f = Fixture(ClaudeExit.TimedOut, verifyPassed: false, commits: 1); await Run(f); Assert.True(f.Prs.Created.Single().Draft); Assert.StartsWith("⏱️ Timed out", f.Jira.Comments.Last().Text); Assert.Equal(1, f.Verifier.Calls); }
     [Fact] public async Task Claude_failure_is_claude_failed_with_draft_even_if_verify_passes() { var f = Fixture(ClaudeExit.Failed, verifyPassed: true, commits: 1); await Run(f); Assert.True(f.Prs.Created.Single().Draft); Assert.StartsWith("❌ Claude failed", f.Jira.Comments.Last().Text); }
