@@ -44,6 +44,9 @@ public sealed class QueueOptions
     /// <summary>Claude CLI executable name or path.</summary>
     public string ClaudeExecutable { get; set; } = "claude";
 
+    /// <summary>Arguments placed before the Claude CLI arguments (for launching through a wrapper or script).</summary>
+    public string[] ClaudeExecutableArgs { get; set; } = [];
+
     /// <summary>Wall-clock limit for one Claude run.</summary>
     public TimeSpan ClaudeTimeout { get; set; } = TimeSpan.FromMinutes(30);
 

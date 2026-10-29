@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 
@@ -35,27 +36,35 @@ public static class ProcessRunner
     }
 
     /// <summary>Runs a process, delivering each stdout line to a callback as it arrives.</summary>
+    /// <remarks>Completes when the process exits; output still buffered is given a short grace period, so a grandchild that keeps the pipes open cannot stall the run.</remarks>
     /// <param name="file">Executable name or path.</param>
     /// <param name="args">Arguments, passed individually.</param>
     /// <param name="workDir">Working directory.</param>
     /// <param name="onStdOutLine">Called for every stdout line.</param>
     /// <param name="timeout">Wall-clock limit; the process tree is killed when it elapses.</param>
     /// <param name="ct">Cancellation token; the process tree is killed when it fires.</param>
+    /// <param name="environment">Extra environment variables for the child, or null.</param>
     /// <returns>The process exit code.</returns>
     /// <exception cref="TimeoutException">The timeout elapsed.</exception>
     /// <exception cref="OperationCanceledException"><paramref name="ct"/> was cancelled.</exception>
-    public static async Task<int> StreamAsync(string file, IEnumerable<string> args, string workDir, Action<string> onStdOutLine, TimeSpan timeout, CancellationToken ct)
+    public static async Task<int> StreamAsync(string file, IEnumerable<string> args, string workDir, Action<string> onStdOutLine, TimeSpan timeout, CancellationToken ct, IReadOnlyDictionary<string, string>? environment = null)
     {
-        using var proc = Start(file, args, workDir);
+        using var proc = Start(file, args, workDir, environment);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        using var readers = new CancellationTokenSource();
         linked.CancelAfter(timeout);
-        var stdErr = proc.StandardError.ReadToEndAsync(CancellationToken.None);
+        var stdOut = Task.Run(async () =>
+        {
+            while (await proc.StandardOutput.ReadLineAsync(readers.Token) is { } line)
+                onStdOutLine(line);
+        }, CancellationToken.None);
+        var stdErr = proc.StandardError.ReadToEndAsync(readers.Token);
+        var drained = Task.WhenAll(stdOut, stdErr);
         try
         {
-            while (await proc.StandardOutput.ReadLineAsync(linked.Token) is { } line)
-                onStdOutLine(line);
             await proc.WaitForExitAsync(linked.Token);
-            await stdErr;
+            if (await Task.WhenAny(drained, Task.Delay(DrainGrace, ct)) == drained)
+                await drained;
             return proc.ExitCode;
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
@@ -68,9 +77,17 @@ public static class ProcessRunner
             await KillTreeAsync(proc);
             throw;
         }
+        finally
+        {
+            await readers.CancelAsync();
+            try { await drained; }
+            catch (Exception) { }
+        }
     }
 
-    private static Process Start(string file, IEnumerable<string> args, string workDir)
+    private static readonly TimeSpan DrainGrace = TimeSpan.FromSeconds(2);
+
+    private static Process Start(string file, IEnumerable<string> args, string workDir, IReadOnlyDictionary<string, string>? environment = null)
     {
         var info = new ProcessStartInfo(file)
         {
@@ -84,6 +101,8 @@ public static class ProcessRunner
             StandardErrorEncoding = Encoding.UTF8,
         };
         foreach (var a in args) info.ArgumentList.Add(a);
+        if (environment is not null)
+            foreach (var (k, v) in environment) info.Environment[k] = v;
         var proc = Process.Start(info) ?? throw new InvalidOperationException($"Failed to start {file}.");
         proc.StandardInput.Close();
         return proc;
@@ -95,8 +114,13 @@ public static class ProcessRunner
         {
             if (!proc.HasExited) proc.Kill(entireProcessTree: true);
         }
-        catch (InvalidOperationException) { }
-        await proc.WaitForExitAsync(CancellationToken.None);
+        catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or AggregateException)
+        {
+            await Console.Error.WriteLineAsync($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] WARN: could not kill process tree: {ex.Message}");
+        }
+        using var bound = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        try { await proc.WaitForExitAsync(bound.Token); }
+        catch (OperationCanceledException) { }
     }
 }
 
