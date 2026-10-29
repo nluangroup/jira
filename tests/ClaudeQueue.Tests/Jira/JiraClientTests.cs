@@ -39,6 +39,13 @@ public class JiraClientTests
         Assert.Equal("Basic " + Convert.ToBase64String("a@b.c:tok"u8.ToArray()), h.Requests[0].Headers.Authorization!.ToString());
     }
 
+    [Fact] public async Task GetStatus_reads_status_name_of_issue()
+    {
+        var h = new FakeHandler().Respond(HttpStatusCode.OK, """{"fields":{"status":{"name":"In Progress"}}}""");
+        Assert.Equal("In Progress", await Client(h).GetStatusAsync("SCRUM-7", default));
+        Assert.Equal("/rest/api/2/issue/SCRUM-7?fields=status", h.Requests[0].RequestUri!.PathAndQuery);
+    }
+
     [Fact] public async Task Transition_posts_matching_transition_id()
     {
         var h = new FakeHandler()

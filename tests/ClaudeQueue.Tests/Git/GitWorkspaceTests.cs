@@ -63,6 +63,29 @@ public sealed class GitWorkspaceTests : IAsyncLifetime
         Assert.Equal(2, await _ws.CommitsSinceAsync(dir, _shaA, default));
     }
 
+    [Fact] public async Task IsDirty_is_false_on_fresh_clone_and_true_for_untracked_or_modified_files()
+    {
+        var dir = await _ws.PrepareAsync(new PlanReference("x/y", "p.md", _shaA), "plan/SCRUM-1-x", default);
+        Assert.False(await _ws.IsDirtyAsync(dir, default));
+        await File.WriteAllTextAsync(Path.Combine(dir, "new.txt"), "n");
+        Assert.True(await _ws.IsDirtyAsync(dir, default));
+        File.Delete(Path.Combine(dir, "new.txt"));
+        await File.WriteAllTextAsync(Path.Combine(dir, "a.txt"), "changed");
+        Assert.True(await _ws.IsDirtyAsync(dir, default));
+    }
+
+    [Fact] public async Task Stash_removes_tracked_and_untracked_changes_and_keeps_them_in_the_stash()
+    {
+        var dir = await _ws.PrepareAsync(new PlanReference("x/y", "p.md", _shaA), "plan/SCRUM-1-x", default);
+        await File.WriteAllTextAsync(Path.Combine(dir, "new.txt"), "n");
+        await File.WriteAllTextAsync(Path.Combine(dir, "a.txt"), "changed");
+        await _ws.StashAsync(dir, default);
+        Assert.False(await _ws.IsDirtyAsync(dir, default));
+        Assert.False(File.Exists(Path.Combine(dir, "new.txt")));
+        Assert.Equal("a", await File.ReadAllTextAsync(Path.Combine(dir, "a.txt")));
+        Assert.Contains("claude-queue-uncommitted", await Git(dir, "stash", "list"));
+    }
+
     [Fact] public async Task Push_publishes_branch_to_origin()
     {
         var dir = await _ws.PrepareAsync(new PlanReference("x/y", "p.md", _shaA), "plan/SCRUM-1-x", default);

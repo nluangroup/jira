@@ -12,7 +12,7 @@ namespace ClaudeQueue.Runs;
 /// <param name="logger">Logger.</param>
 public sealed partial class LiveProgress(IJira jira, IWorkspace workspace, ILogger<LiveProgress> logger)
 {
-    /// <summary>Ticks until cancelled, then returns normally.</summary>
+    /// <summary>Ticks until cancelled, runs one last bounded tick so work finished in the final interval is still reported, then returns normally.</summary>
     /// <param name="cardKey">Jira card to comment on.</param>
     /// <param name="workDir">Clone directory Claude works in.</param>
     /// <param name="branch">Branch to push.</param>
@@ -34,7 +34,18 @@ public sealed partial class LiveProgress(IJira jira, IWorkspace workspace, ILogg
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
         }
+
+        using var bound = new CancellationTokenSource(FinalTickLimit);
+        try
+        {
+            await session.TickAsync(bound.Token);
+        }
+        catch (OperationCanceledException) when (bound.IsCancellationRequested)
+        {
+        }
     }
+
+    private static readonly TimeSpan FinalTickLimit = TimeSpan.FromSeconds(10);
 
     internal Session StartSession(string cardKey, string workDir, string branch, IReadOnlyList<string> taskTitles) =>
         new(jira, workspace, logger, cardKey, workDir, branch, taskTitles);

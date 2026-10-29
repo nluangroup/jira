@@ -38,6 +38,12 @@ public sealed class FakeJira : IJira
         return Task.FromResult(Ready.Count > 0 ? Ready.Dequeue() : null);
     }
 
+    /// <summary>Status returned by <see cref="GetStatusAsync"/> for any card.</summary>
+    public string Status { get; set; } = "Ready for Claude";
+
+    /// <inheritdoc />
+    public Task<string> GetStatusAsync(string cardKey, CancellationToken ct) => Task.FromResult(Status);
+
     /// <inheritdoc />
     public Task TransitionAsync(string cardKey, string statusName, CancellationToken ct)
     {

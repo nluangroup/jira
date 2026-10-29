@@ -53,6 +53,27 @@ public sealed class FakeWorkspace(IEnumerable<string>? heads = null) : IWorkspac
     /// <inheritdoc />
     public Task<int> CommitsSinceAsync(string workDir, string baseSha, CancellationToken ct) => Task.FromResult(Commits);
 
+    /// <summary>Value returned by <see cref="IsDirtyAsync"/>.</summary>
+    public bool Dirty { get; set; }
+
+    /// <summary>Number of stashes made.</summary>
+    public int Stashes { get; private set; }
+
+    /// <summary>Optional shared log; stash appends "stash".</summary>
+    public List<string>? Log { get; set; }
+
+    /// <inheritdoc />
+    public Task<bool> IsDirtyAsync(string workDir, CancellationToken ct) => Task.FromResult(Dirty);
+
+    /// <inheritdoc />
+    public Task StashAsync(string workDir, CancellationToken ct)
+    {
+        Stashes++;
+        Dirty = false;
+        Log?.Add("stash");
+        return Task.CompletedTask;
+    }
+
     /// <inheritdoc />
     public Task PushAsync(string workDir, string branch, CancellationToken ct)
     {

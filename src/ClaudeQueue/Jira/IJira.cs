@@ -13,6 +13,11 @@ public interface IJira
     /// <param name="ct">Cancellation token.</param>
     Task<JiraCard?> GetNextReadyAsync(CancellationToken ct);
 
+    /// <summary>Reads the current status name of a card.</summary>
+    /// <param name="cardKey">Issue key.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<string> GetStatusAsync(string cardKey, CancellationToken ct);
+
     /// <summary>Moves a card to the status with the given name.</summary>
     /// <param name="cardKey">Issue key.</param>
     /// <param name="statusName">Target status name (case-insensitive).</param>

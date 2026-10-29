@@ -29,6 +29,16 @@ public interface IWorkspace
     /// <param name="ct">Cancellation token.</param>
     Task<int> CommitsSinceAsync(string workDir, string baseSha, CancellationToken ct);
 
+    /// <summary>Reports whether the working tree has uncommitted or untracked changes.</summary>
+    /// <param name="workDir">Working directory.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<bool> IsDirtyAsync(string workDir, CancellationToken ct);
+
+    /// <summary>Stashes uncommitted and untracked changes so the tree matches HEAD.</summary>
+    /// <param name="workDir">Working directory.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task StashAsync(string workDir, CancellationToken ct);
+
     /// <summary>Pushes <paramref name="branch"/> to origin, retrying transient failures.</summary>
     /// <param name="workDir">Working directory.</param>
     /// <param name="branch">Branch to push.</param>

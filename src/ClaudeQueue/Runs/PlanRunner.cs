@@ -75,7 +75,7 @@ public sealed partial class PlanRunner(
         var report = ToReport(s, time.GetElapsedTime(started));
         try
         {
-            await jira.CommentAsync(card.Key, ReportBuilder.Build(report), ct);
+            await jira.CommentAsync(card.Key, ReportBuilder.BuildForJira(report), ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {

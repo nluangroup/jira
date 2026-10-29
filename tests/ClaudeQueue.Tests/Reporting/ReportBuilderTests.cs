@@ -44,6 +44,17 @@ public class ReportBuilderTests
         Assert.DoesNotContain("PR", t);
     }
 
+    [Fact] public void Jira_text_wraps_rulings_and_detail_in_noformat_but_plain_text_does_not()
+    {
+        var report = new RunReport(RunOutcome.Verified, "b", "u", false, null, "- GET /items/{id} returns [x] done", TimeSpan.Zero, null, "Rerun 2 - previous: *b*");
+        var jira = ReportBuilder.BuildForJira(report);
+        Assert.Contains("Rulings I made:\n{noformat}\n- GET /items/{id} returns [x] done\n{noformat}", jira);
+        Assert.Contains("{noformat}\nRerun 2 - previous: *b*\n{noformat}", jira);
+        var plain = ReportBuilder.Build(report);
+        Assert.DoesNotContain("{noformat}", plain);
+        Assert.Contains("Rulings I made:\n- GET /items/{id} returns [x] done", plain);
+    }
+
     [Fact] public void Extracts_rulings_section_until_next_heading() =>
         Assert.Equal("- A — b — c\n- D — e — f", ReportBuilder.ExtractRulings("Done.\n\n## Rulings I made\n- A — b — c\n- D — e — f\n\n## Next steps\nx"));
 

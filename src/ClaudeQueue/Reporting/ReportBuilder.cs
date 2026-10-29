@@ -33,12 +33,20 @@ public sealed record RunReport(RunOutcome Outcome, string? Branch, string? PrUrl
 /// <summary>Builds the Jira report comment text.</summary>
 public static class ReportBuilder
 {
-    /// <summary>Renders the report comment.</summary>
+    /// <summary>Renders the report as plain text, suitable for a Markdown pull request body.</summary>
     /// <param name="r">Run report.</param>
-    public static string Build(RunReport r)
+    public static string Build(RunReport r) => Render(r, jira: false);
+
+    /// <summary>Renders the report for a Jira (wiki markup) comment, wrapping free text in noformat blocks so it is not interpreted as markup.</summary>
+    /// <param name="r">Run report.</param>
+    public static string BuildForJira(RunReport r) => Render(r, jira: true);
+
+    private static string Wrap(string text, bool jira) => jira ? $"{{noformat}}\n{text}\n{{noformat}}" : text;
+
+    private static string Render(RunReport r, bool jira)
     {
         var lines = new List<string> { $"{Icon(r.Outcome)} {Label(r.Outcome)}" };
-        if (!string.IsNullOrWhiteSpace(r.Detail)) lines.Add(r.Detail);
+        if (!string.IsNullOrWhiteSpace(r.Detail)) lines.Add(Wrap(r.Detail, jira));
         if (r.PrUrl is not null) lines.Add($"{(r.PrIsDraft ? "PR (draft)" : "PR")}: {r.PrUrl}");
         if (r.Branch is not null) lines.Add($"Branch: {r.Branch}");
         if (r.Verify is { } v)
@@ -56,7 +64,7 @@ public static class ReportBuilder
         {
             lines.Add("");
             lines.Add("Rulings I made:");
-            lines.Add(r.Rulings);
+            lines.Add(Wrap(r.Rulings, jira));
         }
         lines.Add("");
         var time = $"Time: {(int)r.Duration.TotalMinutes}m {r.Duration.Seconds}s";

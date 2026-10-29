@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ClaudeQueue.Jira;
 using ClaudeQueue.Runs;
 using Microsoft.Extensions.Options;
@@ -24,9 +25,18 @@ public sealed partial class QueueWorker(IJira jira, PlanRunner runner, IOptions<
             {
                 if (await jira.GetNextReadyAsync(stoppingToken) is { } card)
                 {
-                    LogPickedUp(logger, card.Key, card.Summary);
-                    wait = false;
-                    await runner.RunAsync(card, stoppingToken);
+                    var status = await jira.GetStatusAsync(card.Key, stoppingToken);
+                    if (!string.Equals(status, o.ReadyStatus, StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogSkipped(logger, card.Key, status);
+                    }
+                    else
+                    {
+                        LogPickedUp(logger, card.Key, card.Summary);
+                        var started = Stopwatch.GetTimestamp();
+                        await runner.RunAsync(card, stoppingToken);
+                        wait = Stopwatch.GetElapsedTime(started) < o.PollInterval;
+                    }
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !stoppingToken.IsCancellationRequested)
@@ -52,6 +62,9 @@ public sealed partial class QueueWorker(IJira jira, PlanRunner runner, IOptions<
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Picked up {Key}: {Summary}")]
     private static partial void LogPickedUp(ILogger logger, string key, string summary);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Skipping {Key}: status is {Status}")]
+    private static partial void LogSkipped(ILogger logger, string key, string status);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Queue loop failed, retrying after the poll interval")]
     private static partial void LogLoopFailed(ILogger logger, Exception ex);

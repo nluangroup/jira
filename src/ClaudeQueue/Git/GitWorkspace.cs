@@ -45,6 +45,14 @@ public sealed partial class GitWorkspace(IOptions<QueueOptions> options, ILogger
         int.Parse((await GitAsync(workDir, ct, "rev-list", "--count", $"{baseSha}..HEAD")).Trim(), CultureInfo.InvariantCulture);
 
     /// <inheritdoc />
+    public async Task<bool> IsDirtyAsync(string workDir, CancellationToken ct) =>
+        (await GitAsync(workDir, ct, "status", "--porcelain")).Trim().Length > 0;
+
+    /// <inheritdoc />
+    public async Task StashAsync(string workDir, CancellationToken ct) =>
+        await GitAsync(workDir, ct, "-c", "user.name=ClaudeQueue", "-c", "user.email=claude-queue@localhost", "stash", "push", "-u", "-m", "claude-queue-uncommitted");
+
+    /// <inheritdoc />
     public Task PushAsync(string workDir, string branch, CancellationToken ct) =>
         Backoff.RetryAsync(
             () => GitAsync(workDir, ct, "push", "-u", "origin", branch),

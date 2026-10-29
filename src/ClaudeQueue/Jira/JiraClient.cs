@@ -51,6 +51,15 @@ public sealed class JiraClient : IJira
     }
 
     /// <inheritdoc />
+    public async Task<string> GetStatusAsync(string cardKey, CancellationToken ct)
+    {
+        using var response = await http.GetAsync($"rest/api/2/issue/{cardKey}?fields=status", ct);
+        response.EnsureSuccessStatusCode();
+        using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        return doc.RootElement.GetProperty("fields").GetProperty("status").GetProperty("name").GetString()!;
+    }
+
+    /// <inheritdoc />
     public async Task TransitionAsync(string cardKey, string statusName, CancellationToken ct)
     {
         var path = $"rest/api/2/issue/{cardKey}/transitions";

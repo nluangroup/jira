@@ -113,6 +113,21 @@ public sealed class LiveProgressTests : IDisposable
     }
 
     [Fact]
+    public async Task Final_tick_after_cancellation_comments_a_task_finished_in_the_last_moment()
+    {
+        var dir = TempDir();
+        var jira = new FakeJira();
+        using var cts = new CancellationTokenSource();
+        var lp = new LiveProgress(jira, new FakeWorkspace(), NullLogger<LiveProgress>.Instance);
+        var run = lp.RunAsync("SCRUM-1", dir, "plan/x", ["One"], TimeSpan.FromHours(1), cts.Token);
+        await Task.Delay(200);
+        WriteLedger(dir, "Task 1: complete");
+        await cts.CancelAsync();
+        await run;
+        Assert.Equal(["Task 1/1 done — One"], jira.Comments.Select(c => c.Text));
+    }
+
+    [Fact]
     public async Task Cancellation_returns_without_throwing()
     {
         using var cts = new CancellationTokenSource();

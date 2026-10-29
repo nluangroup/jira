@@ -35,7 +35,19 @@ public sealed class QueueWorkerTests
 
     private static JiraCard Card(string key) => new(key, "Summary", "no block");
 
-    [Fact] public async Task Runs_cards_one_at_a_time_in_order_without_waiting_between_cards()
+    [Fact] public async Task Card_whose_status_is_no_longer_ready_is_skipped()
+    {
+        var (worker, jira) = Fixture();
+        jira.Status = "In Progress";
+        jira.Ready.Enqueue(Card("SCRUM-1"));
+        await worker.StartAsync(default);
+        await Task.Delay(500);
+        await worker.StopAsync(default);
+        Assert.Empty(jira.Transitions);
+        Assert.InRange(jira.ReadyPolls, 2, 6);
+    }
+
+    [Fact] public async Task Runs_cards_one_at_a_time_in_order_and_waits_poll_interval_after_a_fast_run()
     {
         var (worker, jira) = Fixture();
         jira.Ready.Enqueue(Card("SCRUM-1")); jira.Ready.Enqueue(Card("SCRUM-2"));
@@ -44,7 +56,7 @@ public sealed class QueueWorkerTests
         Assert.Equal(
             [("SCRUM-1", "In Progress"), ("SCRUM-1", "In Review"), ("SCRUM-2", "In Progress"), ("SCRUM-2", "In Review")],
             jira.Transitions.Take(4));
-        Assert.True(DateTime.UtcNow - started < Poll, "worker waited PollInterval after a finished card");
+        Assert.True(DateTime.UtcNow - started >= Poll, "worker did not wait PollInterval after a run shorter than it");
     }
 
     [Fact] public async Task Poll_failure_is_logged_and_loop_continues()
