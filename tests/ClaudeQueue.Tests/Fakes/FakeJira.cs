@@ -20,9 +20,23 @@ public sealed class FakeJira : IJira
     /// <summary>When set, transitions to this status throw.</summary>
     public string? FailTransitionTo { get; set; }
 
+    /// <summary>Number of times <see cref="GetNextReadyAsync"/> was called.</summary>
+    public int ReadyPolls { get; private set; }
+
+    /// <summary>When true, the next poll throws once and the flag resets.</summary>
+    public bool FailNextPoll { get; set; }
+
     /// <inheritdoc />
-    public Task<JiraCard?> GetNextReadyAsync(CancellationToken ct) =>
-        Task.FromResult(Ready.Count > 0 ? Ready.Dequeue() : null);
+    public Task<JiraCard?> GetNextReadyAsync(CancellationToken ct)
+    {
+        ReadyPolls++;
+        if (FailNextPoll)
+        {
+            FailNextPoll = false;
+            throw new HttpRequestException("jira down");
+        }
+        return Task.FromResult(Ready.Count > 0 ? Ready.Dequeue() : null);
+    }
 
     /// <inheritdoc />
     public Task TransitionAsync(string cardKey, string statusName, CancellationToken ct)
