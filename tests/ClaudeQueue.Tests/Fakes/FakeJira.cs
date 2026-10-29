@@ -17,6 +17,9 @@ public sealed class FakeJira : IJira
     /// <summary>When true, <see cref="CommentAsync"/> throws.</summary>
     public bool FailComments { get; set; }
 
+    /// <summary>Number of upcoming comments that throw before comments succeed again.</summary>
+    public int FailNextComments { get; set; }
+
     /// <summary>When set, transitions to this status throw.</summary>
     public string? FailTransitionTo { get; set; }
 
@@ -55,6 +58,11 @@ public sealed class FakeJira : IJira
     /// <inheritdoc />
     public Task CommentAsync(string cardKey, string text, CancellationToken ct)
     {
+        if (FailNextComments > 0)
+        {
+            FailNextComments--;
+            throw new HttpRequestException("jira down");
+        }
         if (FailComments) throw new HttpRequestException("jira down");
         Comments.Add((cardKey, text));
         return Task.CompletedTask;

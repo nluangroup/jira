@@ -11,9 +11,13 @@ public sealed class FakePullRequests : IPullRequests
     /// <summary>PR URLs by head branch, served by <see cref="FindAsync"/>.</summary>
     public Dictionary<string, string> Existing { get; } = [];
 
+    /// <summary>When set, <see cref="CreateAsync"/> throws it.</summary>
+    public Exception? ThrowOnCreate { get; set; }
+
     /// <inheritdoc />
     public Task<string> CreateAsync(string repo, string branch, string title, string body, bool draft, CancellationToken ct)
     {
+        if (ThrowOnCreate is not null) throw ThrowOnCreate;
         Created.Add((repo, branch, title, body, draft));
         return Task.FromResult($"https://github.com/{repo}/pull/{Created.Count}");
     }

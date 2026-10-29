@@ -11,10 +11,18 @@ public sealed class FakeVerifier : IVerifier
     /// <summary>Number of verify runs.</summary>
     public int Calls { get; private set; }
 
+    /// <summary>Optional shared log; each run appends "verify".</summary>
+    public List<string>? Log { get; set; }
+
+    /// <summary>When set, <see cref="RunAsync"/> throws it.</summary>
+    public Exception? Throw { get; set; }
+
     /// <inheritdoc />
     public Task<VerifyResult> RunAsync(string workDir, CancellationToken ct)
     {
         Calls++;
+        Log?.Add("verify");
+        if (Throw is not null) throw Throw;
         return Task.FromResult(new VerifyResult(Passed, Passed ? 5 : 3, Passed ? 0 : 2, 5, ""));
     }
 }

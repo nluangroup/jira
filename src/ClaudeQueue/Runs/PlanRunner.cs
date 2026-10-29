@@ -42,6 +42,9 @@ public sealed partial class PlanRunner(
         public bool PrIsDraft;
         public VerifyResult? Verify;
         public string? ClaudeWorkDir;
+        public ClaudeResult? Claude;
+        public bool VerifyAttempted;
+        public string Step = "run";
         public string? Rulings;
         public decimal? CostUsd;
         public readonly List<string> Notes = [];
@@ -57,7 +60,14 @@ public sealed partial class PlanRunner(
         var started = time.GetTimestamp();
 
         await jira.TransitionAsync(card.Key, o.InProgressStatus, ct);
-        await jira.CommentAsync(card.Key, $"Started {time.GetLocalNow().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", ct);
+        try
+        {
+            await jira.CommentAsync(card.Key, $"Started {time.GetLocalNow().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}", ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            LogStepFailed(logger, card.Key, "started comment", ex.Message);
+        }
 
         var s = new RunState();
         try
@@ -67,8 +77,8 @@ public sealed partial class PlanRunner(
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
             LogRunFailed(logger, card.Key, ex.ToString());
-            s.Outcome = RunOutcome.ClaudeFailed;
-            s.Notes.Add(ex.Message);
+            if (s.Claude is null) s.Outcome = RunOutcome.ClaudeFailed;
+            s.Notes.Add(s.Claude is null ? ex.Message : $"{s.Step} failed: {ex.Message}");
             await TryVerifyAfterFailureAsync(s, ct);
         }
 
@@ -130,37 +140,57 @@ public sealed partial class PlanRunner(
 
         s.ClaudeWorkDir = workDir;
         var result = await RunClaudeWithProgressAsync(card.Key, workDir, branch, titles, RunPrompt.Build(plan, o.ExecutionMode), ct);
+        s.Claude = result;
         s.CostUsd = result.CostUsd;
         s.Rulings = ReportBuilder.ExtractRulings(result.FinalMessage);
+        s.Outcome = OutcomeOf(s);
 
-        s.Verify = await verifier.RunAsync(workDir, ct);
-        s.Outcome = result.Exit switch
-        {
-            ClaudeExit.TimedOut => RunOutcome.TimedOut,
-            ClaudeExit.Failed => RunOutcome.ClaudeFailed,
-            _ => s.Verify.Passed ? RunOutcome.Verified : RunOutcome.VerificationFailed,
-        };
+        s.Step = "verify";
+        await VerifyHeadAsync(s, workDir, ct);
+        s.Outcome = OutcomeOf(s);
 
+        s.Step = "commit count";
         if (await workspace.CommitsSinceAsync(workDir, baseSha, ct) == 0)
         {
             s.Notes.Add("No commits were made");
             return;
         }
 
-        await workspace.PushAsync(workDir, branch, ct);
         s.Branch = branch;
+        s.Step = "push";
+        await workspace.PushAsync(workDir, branch, ct);
+
+        s.Step = "pull request";
         s.PrIsDraft = s.Outcome != RunOutcome.Verified;
         var body = $"Plan: {plan.PlanPath} @ {plan.CommitSha[..7]}\nJira: {o.JiraBaseUrl}/browse/{card.Key}\n\n"
             + ReportBuilder.Build(ToReport(s, time.GetElapsedTime(started)));
         s.PrUrl = await prs.CreateAsync(o.DemoRepo, branch, $"{card.Key} {card.Summary}", body, s.PrIsDraft, ct);
     }
 
+    private static RunOutcome OutcomeOf(RunState s) => s.Claude!.Exit switch
+    {
+        ClaudeExit.TimedOut => RunOutcome.TimedOut,
+        ClaudeExit.Failed => RunOutcome.ClaudeFailed,
+        _ => s.Verify is { Passed: true } ? RunOutcome.Verified : RunOutcome.VerificationFailed,
+    };
+
+    private async Task VerifyHeadAsync(RunState s, string workDir, CancellationToken ct)
+    {
+        s.VerifyAttempted = true;
+        if (await workspace.IsDirtyAsync(workDir, ct))
+        {
+            await workspace.StashAsync(workDir, ct);
+            s.Notes.Add("Claude left uncommitted changes (stashed, not in the PR)");
+        }
+        s.Verify = await verifier.RunAsync(workDir, ct);
+    }
+
     private async Task TryVerifyAfterFailureAsync(RunState s, CancellationToken ct)
     {
-        if (s.ClaudeWorkDir is null || s.Verify is not null) return;
+        if (s.ClaudeWorkDir is null || s.VerifyAttempted) return;
         try
         {
-            s.Verify = await verifier.RunAsync(s.ClaudeWorkDir, ct);
+            await VerifyHeadAsync(s, s.ClaudeWorkDir, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {

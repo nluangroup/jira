@@ -88,6 +88,63 @@ public sealed class PlanRunnerTests : IDisposable
         Assert.Empty(f.Prs.Created);
     }
 
+    [Fact] public async Task Uncommitted_changes_are_stashed_before_verify_and_noted()
+    {
+        var f = Fixture();
+        var log = new List<string>();
+        f.Workspace.Log = log; f.Verifier.Log = log; f.Workspace.Dirty = true;
+        await Run(f);
+        Assert.Equal(["stash", "verify"], log);
+        Assert.Contains("Claude left uncommitted changes (stashed, not in the PR)", f.Jira.Comments.Last().Text);
+        Assert.Contains("Claude left uncommitted changes (stashed, not in the PR)", f.Prs.Created.Single().Body);
+    }
+
+    [Fact] public async Task Clean_tree_is_not_stashed() { var f = Fixture(); await Run(f); Assert.Equal(0, f.Workspace.Stashes); Assert.DoesNotContain("uncommitted", f.Jira.Comments.Last().Text); }
+
+    [Fact] public async Task Pr_creation_failure_after_verified_run_keeps_verified_label_and_names_the_step()
+    {
+        var f = Fixture(); f.Prs.ThrowOnCreate = new InvalidOperationException("gh exploded");
+        await Run(f);
+        var last = f.Jira.Comments.Last().Text;
+        Assert.StartsWith("✅ Verified", last);
+        Assert.Contains("pull request failed: gh exploded", last);
+        Assert.DoesNotContain("Claude failed", last);
+        Assert.Contains("Branch: " + Base, last);
+        Assert.Equal(1, f.Verifier.Calls);
+        Assert.Equal("In Review", f.Jira.Transitions.Last().Status);
+    }
+
+    [Fact] public async Task Push_failure_after_verification_failure_keeps_that_label_and_branch()
+    {
+        var f = Fixture(verifyPassed: false); f.Workspace.FailNextPush = true;
+        await Run(f);
+        var last = f.Jira.Comments.Last().Text;
+        Assert.StartsWith("⚠️ Verification failed", last);
+        Assert.Contains("push failed: push failed", last);
+        Assert.Contains("Branch: " + Base, last);
+        Assert.Empty(f.Prs.Created);
+    }
+
+    [Fact] public async Task Verifier_exception_runs_verify_once_and_reports_verify_step_after_claude_succeeded()
+    {
+        var f = Fixture(); f.Verifier.Throw = new InvalidOperationException("pwsh missing");
+        await Run(f);
+        Assert.Equal(1, f.Verifier.Calls);
+        var last = f.Jira.Comments.Last().Text;
+        Assert.DoesNotContain("Claude failed", last);
+        Assert.Contains("verify failed: pwsh missing", last);
+        Assert.Equal("In Review", f.Jira.Transitions.Last().Status);
+    }
+
+    [Fact] public async Task Failing_started_comment_still_runs_and_ends_with_report_and_review()
+    {
+        var f = Fixture(); f.Jira.FailNextComments = 1;
+        await Run(f);
+        Assert.Equal(1, f.Claude.Calls);
+        Assert.StartsWith("✅ Verified", f.Jira.Comments.Last().Text);
+        Assert.Equal("In Review", f.Jira.Transitions.Last().Status);
+    }
+
     [Fact] public async Task Failed_review_transition_does_not_throw() { var f = Fixture(); f.Jira.FailTransitionTo = "In Review"; await Run(f); Assert.Contains("Verified", f.Jira.Comments.Last().Text); }
     [Fact] public async Task Pr_title_is_card_key_and_summary() { var f = Fixture(commits: 1); await f.Runner.RunAsync(Card(ValidBlock, summary: "Health endpoint"), default); Assert.Equal("SCRUM-7 Health endpoint", f.Prs.Created.Single().Title); }
 
