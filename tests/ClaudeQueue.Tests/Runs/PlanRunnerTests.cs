@@ -75,6 +75,19 @@ public sealed class PlanRunnerTests : IDisposable
         Assert.StartsWith("❌ Claude failed", f.Jira.Comments.Last().Text);
     }
 
+    [Fact] public async Task Claude_exception_still_runs_verify_and_reports()
+    {
+        var f = Fixture(); f.Claude.ThrowOnRun = new InvalidOperationException("boom");
+        await Run(f);
+        Assert.Equal(1, f.Verifier.Calls);
+        var last = f.Jira.Comments.Last().Text;
+        Assert.StartsWith("❌ Claude failed", last);
+        Assert.Contains("boom", last);
+        Assert.Contains("Tests:", last);
+        Assert.Equal("In Review", f.Jira.Transitions.Last().Status);
+        Assert.Empty(f.Prs.Created);
+    }
+
     [Fact] public async Task Failed_review_transition_does_not_throw() { var f = Fixture(); f.Jira.FailTransitionTo = "In Review"; await Run(f); Assert.Contains("Verified", f.Jira.Comments.Last().Text); }
     [Fact] public async Task Pr_title_is_card_key_and_summary() { var f = Fixture(commits: 1); await f.Runner.RunAsync(Card(ValidBlock, summary: "Health endpoint"), default); Assert.Equal("SCRUM-7 Health endpoint", f.Prs.Created.Single().Title); }
 

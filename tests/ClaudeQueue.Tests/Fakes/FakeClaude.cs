@@ -17,11 +17,15 @@ public sealed class FakeClaude : IClaude
     /// <summary>When set, <see cref="RunAsync"/> waits on the token and throws when it is cancelled.</summary>
     public bool BlockUntilCancelled { get; set; }
 
+    /// <summary>When set, <see cref="RunAsync"/> throws it.</summary>
+    public Exception? ThrowOnRun { get; set; }
+
     /// <inheritdoc />
     public async Task<ClaudeResult> RunAsync(string workDir, string prompt, Action<StreamEvent> onEvent, CancellationToken ct)
     {
         Calls++;
         Prompts.Add(prompt);
+        if (ThrowOnRun is not null) throw ThrowOnRun;
         if (BlockUntilCancelled) await Task.Delay(Timeout.Infinite, ct);
         return Result;
     }

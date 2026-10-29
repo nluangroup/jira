@@ -41,6 +41,7 @@ public sealed partial class PlanRunner(
         public string? PrUrl;
         public bool PrIsDraft;
         public VerifyResult? Verify;
+        public string? ClaudeWorkDir;
         public string? Rulings;
         public decimal? CostUsd;
         public readonly List<string> Notes = [];
@@ -68,6 +69,7 @@ public sealed partial class PlanRunner(
             LogRunFailed(logger, card.Key, ex.ToString());
             s.Outcome = RunOutcome.ClaudeFailed;
             s.Notes.Add(ex.Message);
+            await TryVerifyAfterFailureAsync(s, ct);
         }
 
         var report = ToReport(s, time.GetElapsedTime(started));
@@ -126,6 +128,7 @@ public sealed partial class PlanRunner(
         }
         var titles = PlanTaskTitles.Parse(await File.ReadAllTextAsync(planFile, ct));
 
+        s.ClaudeWorkDir = workDir;
         var result = await RunClaudeWithProgressAsync(card.Key, workDir, branch, titles, RunPrompt.Build(plan, o.ExecutionMode), ct);
         s.CostUsd = result.CostUsd;
         s.Rulings = ReportBuilder.ExtractRulings(result.FinalMessage);
@@ -150,6 +153,19 @@ public sealed partial class PlanRunner(
         var body = $"Plan: {plan.PlanPath} @ {plan.CommitSha[..7]}\nJira: {o.JiraBaseUrl}/browse/{card.Key}\n\n"
             + ReportBuilder.Build(ToReport(s, time.GetElapsedTime(started)));
         s.PrUrl = await prs.CreateAsync(o.DemoRepo, branch, $"{card.Key} {card.Summary}", body, s.PrIsDraft, ct);
+    }
+
+    private async Task TryVerifyAfterFailureAsync(RunState s, CancellationToken ct)
+    {
+        if (s.ClaudeWorkDir is null || s.Verify is not null) return;
+        try
+        {
+            s.Verify = await verifier.RunAsync(s.ClaudeWorkDir, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            LogStepFailed(logger, "run", "verify after failure", ex.Message);
+        }
     }
 
     private static void Invalid(RunState s, string reason)
