@@ -32,3 +32,13 @@
 ## Architecture — 2026-10-29
 - [ ] **#17 — Standard resilience handler retries POSTs** (`src/ClaudeQueue/Program.cs`)
   A lost response can double a Jira comment, or turn an already-applied transition into a 400. Accepted for the demo; revisit with `DisableForUnsafeHttpMethods` plus idempotent checks if it shows up.
+
+## Medium Priority — 2026-10-29 (headless permissions)
+- [ ] **#18 — No warning when the target repo grants no allow rules** (`src/ClaudeQueue/Claude/HeadlessPermissions.cs:~34`)
+  A settings file with no `permissions` key, or deny-only, omits `--allowedTools`; under `dontAsk` the run can do almost nothing and fails like an ordinary Claude failure. Warn when Allow is empty and update `Deny_only_file_has_empty_allow_and_no_warning`.
+
+## Low Priority — 2026-10-29 (headless permissions)
+- [ ] **#19 — Settings file read synchronously inside the async run** (`src/ClaudeQueue/Claude/HeadlessPermissions.cs:~24`)
+  Acceptable for one small file.
+- [ ] **#20 — Permissions warning lost if ClaudeCli.RunAsync throws** (`src/ClaudeQueue/Claude/ClaudeCli.cs`)
+  Still in the console log.

@@ -51,6 +51,11 @@ public class HeadlessPermissionsTests : IDisposable
     [InlineData("""{"permissions":{"allow":"Read"}}""")]
     [InlineData("""{"permissions":{"deny":[1]}}""")]
     [InlineData("""{"permissions":5}""")]
+    [InlineData("""{"permissions":{"allow":["Read",null]}}""")]
+    [InlineData("""{"permissions":{"allow":["Read",{"a":1}]}}""")]
+    [InlineData("""{"permissions":{"deny":["X",true]}}""")]
+    [InlineData("""{"permissions":{"deny":{"a":"b"}}}""")]
+    [InlineData("")]
     public void Invalid_or_wrongly_shaped_file_warns_without_throwing(string json)
     {
         WriteSettings(json);
@@ -69,6 +74,24 @@ public class HeadlessPermissionsTests : IDisposable
         WriteSettings(json);
         var p = HeadlessPermissions.Load(_dir);
         Assert.Empty(p.Allow);
+        Assert.Equal(HeadlessPermissions.FixedDenies, p.Deny);
+        Assert.Null(p.Warning);
+    }
+
+    [Fact] public void Deny_only_file_has_empty_allow_and_no_warning()
+    {
+        WriteSettings("""{"permissions":{"deny":["Bash(rm:*)"]}}""");
+        var p = HeadlessPermissions.Load(_dir);
+        Assert.Empty(p.Allow);
+        Assert.Equal(["Bash(rm:*)", .. HeadlessPermissions.FixedDenies], p.Deny);
+        Assert.Null(p.Warning);
+    }
+
+    [Fact] public void Allow_only_file_gets_only_fixed_denies()
+    {
+        WriteSettings("""{"permissions":{"allow":["Read"]}}""");
+        var p = HeadlessPermissions.Load(_dir);
+        Assert.Equal(["Read"], p.Allow);
         Assert.Equal(HeadlessPermissions.FixedDenies, p.Deny);
         Assert.Null(p.Warning);
     }

@@ -61,6 +61,16 @@ public sealed class PlanRunnerTests : IDisposable
         Assert.Contains("No .claude/settings.json in the repo", f.Jira.Comments.Last().Text);
     }
 
+    [Fact] public async Task Permissions_warning_on_timeout_lands_in_report_and_pr_body()
+    {
+        var f = Fixture(ClaudeExit.TimedOut, verifyPassed: false, commits: 1);
+        f.Claude.Result = f.Claude.Result with { PermissionsWarning = "Could not read .claude/settings.json (invalid JSON)" };
+        await Run(f);
+        Assert.StartsWith("⏱️ Timed out", f.Jira.Comments.Last().Text);
+        Assert.Contains("Could not read .claude/settings.json (invalid JSON)", f.Jira.Comments.Last().Text);
+        Assert.Contains("Could not read .claude/settings.json (invalid JSON)", f.Prs.Created.Single().Body);
+    }
+
     [Fact] public async Task Verify_failure_gives_draft_pr() { var f = Fixture(ClaudeExit.Succeeded, verifyPassed: false, commits: 2); await Run(f); Assert.True(f.Prs.Created.Single().Draft); Assert.StartsWith("⚠️ Verification failed", f.Jira.Comments.Last().Text); }
     [Fact] public async Task Timeout_still_gets_draft_pr_from_existing_commits() { var f = Fixture(ClaudeExit.TimedOut, verifyPassed: false, commits: 1); await Run(f); Assert.True(f.Prs.Created.Single().Draft); Assert.StartsWith("⏱️ Timed out", f.Jira.Comments.Last().Text); Assert.Equal(1, f.Verifier.Calls); }
     [Fact] public async Task Claude_failure_is_claude_failed_with_draft_even_if_verify_passes() { var f = Fixture(ClaudeExit.Failed, verifyPassed: true, commits: 1); await Run(f); Assert.True(f.Prs.Created.Single().Draft); Assert.StartsWith("❌ Claude failed", f.Jira.Comments.Last().Text); }
