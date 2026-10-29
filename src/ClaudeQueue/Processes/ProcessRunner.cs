@@ -18,9 +18,10 @@ public static class ProcessRunner
     /// <param name="args">Arguments, passed individually (never joined into one string).</param>
     /// <param name="workDir">Working directory.</param>
     /// <param name="ct">Cancellation token.</param>
-    public static async Task<ProcessResult> RunAsync(string file, IEnumerable<string> args, string workDir, CancellationToken ct)
+    /// <param name="environment">Extra environment variables for the child, or null.</param>
+    public static async Task<ProcessResult> RunAsync(string file, IEnumerable<string> args, string workDir, CancellationToken ct, IReadOnlyDictionary<string, string>? environment = null)
     {
-        using var proc = Start(file, args, workDir);
+        using var proc = Start(file, args, workDir, environment);
         try
         {
             var stdOut = proc.StandardOutput.ReadToEndAsync(ct);

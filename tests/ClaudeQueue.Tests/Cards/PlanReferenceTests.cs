@@ -19,6 +19,18 @@ public class PlanReferenceTests
         Assert.True(PlanReference.TryParse($"  queue-repo:  a/b \nQUEUE-PLAN: x.md\nqueue-commit: {Sha}  ", out _, out _));
 
     [Theory]
+    [InlineData("* Queue-Repo: a/b\n* Queue-Plan: x.md\n- Queue-Commit: {0}")]
+    [InlineData("**Queue-Repo:** a/b\n**Queue-Plan:** x.md\n**Queue-Commit:** {0}")]
+    [InlineData("*Queue-Repo:* a/b\r\n*Queue-Plan:* x.md\r\n*Queue-Commit:* {0}")]
+    [InlineData("* **Queue-Repo**: a/b\n* **Queue-Plan**: x.md\n* **Queue-Commit**: {0}")]
+    [InlineData("Queue-Repo: **a/b**\nQueue-Plan: x.md\nQueue-Commit: {0}")]
+    public void Tolerates_bullets_and_bold_markers(string template)
+    {
+        Assert.True(PlanReference.TryParse(template.Replace("{0}", Sha), out var r, out var error), error);
+        Assert.Equal(new PlanReference("a/b", "x.md", Sha), r);
+    }
+
+    [Theory]
     [InlineData(null, "description is empty")]
     [InlineData("Queue-Repo: a/b\nQueue-Plan: x.md", "Queue-Commit is missing")]
     [InlineData("Queue-Repo: a/b\nQueue-Plan: x.md\nQueue-Commit: abc123", "Queue-Commit must be a full 40-character SHA")]

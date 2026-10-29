@@ -54,6 +54,28 @@ public class PwshVerifierTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact] public async Task Verifier_times_out_kills_script_and_still_writes_log()
+    {
+        var dir = EmptyTempDir();
+        var root = Path.GetDirectoryName(dir)!;
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(dir, "verify.ps1"), "Write-Output 'started'; Start-Sleep -Seconds 60");
+            var options = Options.Create(new QueueOptions { VerifyTimeout = TimeSpan.FromSeconds(2) });
+            var r = await new PwshVerifier(options).RunAsync(dir, default);
+            Assert.False(r.Passed);
+            Assert.Equal("verify timed out after 0m", r.Detail);
+            Assert.Contains("started", await File.ReadAllTextAsync(Path.Combine(root, "work-verify.log")));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact] public async Task Verifier_runs_with_msbuild_node_reuse_disabled()
+    {
+        var r = await RunWith("Write-Output \"nr=$env:MSBUILDDISABLENODEREUSE srv=$env:DOTNET_CLI_USE_MSBUILD_SERVER\"; exit 0");
+        Assert.Contains("nr=1 srv=0", r.Detail);
+    }
+
     [Fact] public async Task Missing_verify_script_fails_with_reason()
     {
         var dir = EmptyTempDir();

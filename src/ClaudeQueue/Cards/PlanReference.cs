@@ -8,7 +8,7 @@ namespace ClaudeQueue.Cards;
 /// <param name="CommitSha">Full 40-character commit SHA the plan was approved at.</param>
 public sealed partial record PlanReference(string Repo, string PlanPath, string CommitSha)
 {
-    [GeneratedRegex(@"^\s*queue-(repo|plan|commit)\s*:\s*(\S+)\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline)]
+    [GeneratedRegex(@"^[ \t]*(?:[*-][ \t]+)?\**[ \t]*queue-(repo|plan|commit)\**[ \t]*:[ \t]*\**[ \t]*([^\s*]\S*?)\**\s*$", RegexOptions.IgnoreCase | RegexOptions.Multiline)]
     private static partial Regex KeyLine();
 
     [GeneratedRegex("^[0-9a-f]{40}$", RegexOptions.IgnoreCase)]

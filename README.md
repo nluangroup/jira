@@ -31,7 +31,7 @@ The card description must contain these three lines (anywhere):
 
 ```
 Queue-Repo: nluangroup/agentic-demo
-Queue-Plan: docs/plans/<plan>.md
+Queue-Plan: docs/superpowers/plans/<plan>.md
 Queue-Commit: <full 40-character SHA that contains the plan>
 ```
 

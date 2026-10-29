@@ -58,4 +58,7 @@ public sealed class QueueOptions
 
     /// <summary>Verification script run in the repo after Claude finishes.</summary>
     public string VerifyScript { get; set; } = "verify.ps1";
+
+    /// <summary>Wall-clock limit for one verify run.</summary>
+    public TimeSpan VerifyTimeout { get; set; } = TimeSpan.FromMinutes(10);
 }

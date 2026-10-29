@@ -55,9 +55,15 @@ public sealed partial class GitWorkspace(IOptions<QueueOptions> options, ILogger
     [LoggerMessage(Level = LogLevel.Warning, Message = "git push failed (retry {Retry}/3): {Message}")]
     private static partial void LogPushRetry(ILogger logger, int retry, string message);
 
+    private static readonly Dictionary<string, string> NoPromptEnvironment = new()
+    {
+        ["GIT_TERMINAL_PROMPT"] = "0",
+        ["GCM_INTERACTIVE"] = "never",
+    };
+
     private static async Task<string> GitAsync(string workDir, CancellationToken ct, params string[] args)
     {
-        var r = await ProcessRunner.RunAsync("git", args, workDir, ct);
+        var r = await ProcessRunner.RunAsync("git", args, workDir, ct, NoPromptEnvironment);
         if (r.ExitCode != 0)
             throw new InvalidOperationException($"git {string.Join(' ', args)} failed (exit {r.ExitCode}): {r.StdErr.Trim()}");
         return r.StdOut;
