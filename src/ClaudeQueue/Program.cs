@@ -1,4 +1,5 @@
 using ClaudeQueue;
+using ClaudeQueue.Jira;
 using ClaudeQueue.Logging;
 using Microsoft.Extensions.Logging.Console;
 
@@ -11,6 +12,8 @@ builder.Logging.AddConsoleFormatter<TimestampConsoleFormatter, ConsoleFormatterO
 builder.Services.Configure<QueueOptions>(builder.Configuration.GetSection(QueueOptions.SectionName));
 builder.Services.PostConfigure<QueueOptions>(o =>
     o.RunsDirectory = Environment.ExpandEnvironmentVariables(o.RunsDirectory));
+
+builder.Services.AddHttpClient<IJira, JiraClient>().AddStandardResilienceHandler();
 
 var host = builder.Build();
 host.Run();
