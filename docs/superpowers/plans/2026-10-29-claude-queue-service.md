@@ -250,8 +250,8 @@ public void Unknown_or_bad_lines_are_ignored(string line) => Assert.Null(StreamE
 
 **Interfaces:**
 - Produces:
-  - `public sealed record VerifyResult(bool Passed, int? TestsPassed, int? TestsFailed, int? TestsTotal, string Detail);`
-  - `public static class TestSummaryParser { public static (int Passed, int Failed, int Total)? Parse(string output); }` — sums every `dotnet test` summary line.
+  - `public sealed record VerifyResult(bool Passed, int? TestsPassed, int? TestsFailed, int? TestsTotal, string Detail) { public IReadOnlyList<string> Skipped { get; init; } = []; }` — `Skipped` holds the verify script's SKIPPED lines (owner's verify contract: PASS / FAIL / SKIPPED; a skip is not a failure but must be reported).
+  - `public static class TestSummaryParser { public static (int Passed, int Failed, int Total)? Parse(string output); public static IReadOnlyList<string> SkippedChecks(string output); }` — `Parse` sums every `dotnet test` summary line; `SkippedChecks` returns each output line that starts with `SKIPPED` (after optional whitespace, case-sensitive), trimmed, in order.
   - `public interface IVerifier { Task<VerifyResult> RunAsync(string workDir, CancellationToken ct); }`
   - `public enum RunOutcome { Verified, VerificationFailed, ClaudeFailed, TimedOut, InvalidCard }`
   - `public sealed record RunReport(RunOutcome Outcome, string? Branch, string? PrUrl, bool PrIsDraft, VerifyResult? Verify, string? Rulings, TimeSpan Duration, decimal? CostUsd, string? Detail);`
@@ -265,6 +265,13 @@ public void Unknown_or_bad_lines_are_ignored(string line) => Assert.Null(StreamE
         "Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 1 s - A.Tests.dll (net10.0)\n" +
         "Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 2 s - B.Tests.dll (net10.0)"));
 [Fact] public void No_summary_returns_null() => Assert.Null(TestSummaryParser.Parse("Build FAILED."));
+[Fact] public void Collects_skipped_check_lines() =>
+    Assert.Equal(["SKIPPED: mutation testing — dotnet-stryker not installed", "SKIPPED: coverage"],
+        TestSummaryParser.SkippedChecks("PASS: format\n  SKIPPED: mutation testing — dotnet-stryker not installed\nFAIL: nothing\nSKIPPED: coverage\nnot SKIPPED here"));
+[Fact] public void Report_lists_skipped_checks_even_when_verified() {
+    var t = ReportBuilder.Build(new RunReport(RunOutcome.Verified, "b", "u", false,
+        new VerifyResult(true, 5, 0, 5, "") { Skipped = ["SKIPPED: coverage"] }, null, TimeSpan.Zero, null, null));
+    Assert.StartsWith("✅ Verified", t); Assert.Contains("⚠️ Skipped checks:\n- SKIPPED: coverage", t); }
 
 [Theory]
 [InlineData(RunOutcome.Verified, "Verified")]
@@ -296,7 +303,7 @@ public void Outcome_labels_match_spec(RunOutcome o, string label) => Assert.Equa
 ```
 
 - [ ] **Step 2:** `dotnet test` → FAIL.
-- [ ] **Step 3:** Implement. Summary regex per line: `(Passed|Failed)!\s+-\s+Failed:\s+(\d+),\s+Passed:\s+(\d+),\s+Skipped:\s+\d+,\s+Total:\s+(\d+)`. Report layout, one item per line, omitting absent items: `<icon> <Label>` (✅ Verified, ⚠️ Verification failed, ❌ Claude failed, ⏱️ Timed out, ⛔ Invalid card), `Detail`, `PR:`/`PR (draft):`, `Branch:`, `Tests: <passed>/<total> passed` (+ `, <failed> failed` when >0; `Tests: no summary` when verify ran without one), blank line + `Rulings I made:` block, `Time: <m>m <s>s · Cost: $<0.00>` (cost omitted when null, cost formatted with invariant culture). `ExtractRulings`: from a line containing "Rulings I made" (any heading level or bold) to the next markdown heading or end; trimmed; null if absent or empty.
+- [ ] **Step 3:** Implement. Summary regex per line: `(Passed|Failed)!\s+-\s+Failed:\s+(\d+),\s+Passed:\s+(\d+),\s+Skipped:\s+\d+,\s+Total:\s+(\d+)`. Report layout, one item per line, omitting absent items: `<icon> <Label>` (✅ Verified, ⚠️ Verification failed, ❌ Claude failed, ⏱️ Timed out, ⛔ Invalid card), `Detail`, `PR:`/`PR (draft):`, `Branch:`, `Tests: <passed>/<total> passed` (+ `, <failed> failed` when >0; `Tests: no summary` when verify ran without one), when `Verify.Skipped` is non-empty a `⚠️ Skipped checks:` line followed by one `- <line>` per skip, blank line + `Rulings I made:` block, `Time: <m>m <s>s · Cost: $<0.00>` (cost omitted when null, cost formatted with invariant culture). `ExtractRulings`: from a line containing "Rulings I made" (any heading level or bold) to the next markdown heading or end; trimmed; null if absent or empty.
 - [ ] **Step 4:** `dotnet test` → PASS.
 - [ ] **Step 5:** Commit `feat: parse test summaries and build run report`.
 
@@ -383,7 +390,7 @@ Endpoints (REST v2, so descriptions and comments are plain text):
   - `public sealed class GitWorkspace(IOptions<QueueOptions> options, ILogger<GitWorkspace> logger) : IWorkspace` — `PrepareAsync` clones `https://github.com/<repo>.git` into `<RunsDirectory>/<yyyyMMdd-HHmmss>-<branch with / → _>`, `git checkout <sha>`, `git checkout -b <branch>`, returns the directory. `PushAsync` = `git push -u origin <branch>`, retried 3× with 2/4/8 s backoff, then throws. Any non-zero git exit throws `InvalidOperationException` containing the git command and stderr.
   - `public interface IPullRequests { Task<string> CreateAsync(string repo, string branch, string title, string body, bool draft, CancellationToken ct); }`
   - `public sealed class GhPullRequests : IPullRequests` with `public static IReadOnlyList<string> BuildArgs(string repo, string branch, string title, string body, bool draft)` → `pr create --repo <repo> --base main --head <branch> --title <title> --body <body> [--draft]`; returns the trimmed stdout (the PR URL). Retried 3× with 2/4/8 s backoff on non-zero exit, then throws with stderr.
-  - `public sealed class PwshVerifier(IOptions<QueueOptions> options) : IVerifier` — runs `pwsh -NoProfile -ExecutionPolicy Bypass -File <VerifyScript>` in `workDir`, writes combined output to `<workDir>/../<dirname>-verify.log`, `Detail` = last 20 output lines.
+  - `public sealed class PwshVerifier(IOptions<QueueOptions> options) : IVerifier` — runs `pwsh -NoProfile -ExecutionPolicy Bypass -File <VerifyScript>` in `workDir`, writes combined output to `<workDir>/../<dirname>-verify.log`, `Detail` = last 20 output lines; `Skipped` = `TestSummaryParser.SkippedChecks(output)`.
 
 - [ ] **Step 1: Write the failing tests** (git tests create a temp bare repo with one commit as `origin`, using a `file://` URL; expose an `internal` overridable clone URL factory on `GitWorkspace` for this.)
 
@@ -419,8 +426,10 @@ Endpoints (REST v2, so descriptions and comments are plain text):
 
 [Fact] public async Task Verifier_passes_with_counts()   // PwshVerifierTests: temp dir with a verify.ps1
 {   // verify.ps1: Write-Output "Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 1 s - T.dll (net10.0)"; exit 0
-    Assert.Equal(new VerifyResult(true, 5, 0, 5, r.Detail), r);
+    Assert.True(r.Passed); Assert.Equal((5, 0, 5), (r.TestsPassed, r.TestsFailed, r.TestsTotal)); Assert.Empty(r.Skipped);
 }
+[Fact] public async Task Verifier_reports_skipped_checks() =>
+    Assert.Equal(["SKIPPED: coverage"], (await RunWith("Write-Output 'SKIPPED: coverage'; exit 0")).Skipped);
 [Fact] public async Task Verifier_fails_on_nonzero_exit() => Assert.False((await RunWith("exit 1")).Passed);
 [Fact] public async Task Missing_verify_script_fails_with_reason()
 {
@@ -528,7 +537,7 @@ Each tick: (1) `HeadShaAsync`; if it changed since the last tick and differs fro
 ### Task 9: Plan runner orchestration
 
 **Files:**
-- Create: `src/ClaudeQueue/Runs/PlanRunner.cs`, `tests/ClaudeQueue.Tests/Fakes/FakeClaude.cs`, `.../Fakes/FakeVerifier.cs`, `.../Fakes/FakePullRequests.cs`
+- Create: `src/ClaudeQueue/Runs/PlanRunner.cs`, `src/ClaudeQueue/Runs/KeepAwake.cs`, `tests/ClaudeQueue.Tests/Runs/KeepAwakeTests.cs`, `tests/ClaudeQueue.Tests/Fakes/FakeClaude.cs`, `.../Fakes/FakeVerifier.cs`, `.../Fakes/FakePullRequests.cs`
 - Test: `tests/ClaudeQueue.Tests/Runs/PlanRunnerTests.cs`
 
 **Interfaces:**
@@ -536,6 +545,8 @@ Each tick: (1) `HeadShaAsync`; if it changed since the last tick and differs fro
 - Produces: `public sealed class PlanRunner(IJira jira, IWorkspace workspace, IClaude claude, IVerifier verifier, IPullRequests prs, LiveProgress progress, IOptions<QueueOptions> options, TimeProvider time, ILogger<PlanRunner> logger)` with `public Task RunAsync(JiraCard card, CancellationToken ct)`.
 
 Sequence: transition to `InProgressStatus` + comment `Started <yyyy-MM-dd HH:mm:ss>` → parse `PlanReference` (failure, or `Repo` ≠ `DemoRepo` ⇒ `Invalid card` with reason `Card names repo '<x>', expected '<DemoRepo>'`) → `BranchName.For` → `PrepareAsync` → read plan file from workDir, `PlanTaskTitles.Parse` (missing file ⇒ `Claude failed`, Detail `Plan file not found: <path>`) → start `LiveProgress` with a linked CTS → `claude.RunAsync(workDir, RunPrompt.Build(...), e => log ToConsoleLine(e))` → stop progress (cancel + await) → `verifier.RunAsync` (always, including after a timeout) → `CommitsSinceAsync(base)`: if > 0 then `PushAsync` + `prs.CreateAsync(DemoRepo, branch, $"{card.Key} {card.Summary}", body, draft: outcome != Verified)` where `body` = `Plan: <PlanPath> @ <sha7>\nJira: <JiraBaseUrl>/browse/<key>\n\n` + the report text, else Detail `No commits were made` → outcome → `CommentAsync(ReportBuilder.Build(...))` → transition to `ReviewStatus`.
+
+**Keep the machine awake** for the whole run (from "Started" to the final transition): `Runs/KeepAwake.cs` — `public sealed class KeepAwake : IDisposable` with `public static KeepAwake Acquire()`, calling Win32 `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)` via `[LibraryImport("kernel32.dll")]` on acquire and `SetThreadExecutionState(ES_CONTINUOUS)` on dispose; a no-op on non-Windows (`OperatingSystem.IsWindows()`). Owner's harness log records an unattended run killed by the machine sleeping. Because `SetThreadExecutionState` is per-thread and `async` code hops threads, acquire and release it on a dedicated thread: `Acquire()` starts a background thread that sets the state and blocks on a `ManualResetEventSlim`; `Dispose()` signals it, and the thread clears the state and exits. Test: `KeepAwake_acquire_and_dispose_do_not_throw` (Windows-only assertion that `Dispose` completes within 2 s).
 
 Outcome rule: Claude `TimedOut` ⇒ `Timed out`; Claude `Failed` ⇒ `Claude failed`; else verify passed ⇒ `Verified`, else `Verification failed`.
 
