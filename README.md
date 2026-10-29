@@ -45,6 +45,8 @@ dotnet run --project src/ClaudeQueue
 
 Drag a card to Ready for Claude; it is picked up within a few seconds.
 
+Test counts in the report are read from `dotnet test` and Vitest summary lines in the `verify.ps1` output.
+
 ## Logs
 
 Run files land in `RunsDirectory` (default `%LOCALAPPDATA%\ClaudeQueue\runs`): one clone directory per run, with `<run>-claude.jsonl` (Claude's event stream) and `<run>-verify.log` siblings.

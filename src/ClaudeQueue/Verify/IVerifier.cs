@@ -21,12 +21,25 @@ public static partial class TestSummaryParser
     [GeneratedRegex(@"(?:Passed|Failed)!\s+-\s+Failed:\s+(\d+),\s+Passed:\s+(\d+),\s+Skipped:\s+\d+,\s+Total:\s+(\d+)")]
     private static partial Regex SummaryLine();
 
-    /// <summary>Sums every <c>dotnet test</c> summary line; null when there are none.</summary>
+    [GeneratedRegex(@"\x1b\[[0-9;]*m")]
+    private static partial Regex AnsiCode();
+
+    [GeneratedRegex(@"^[ \t]*Tests[ \t]+(?<parts>[^\r\n]*?)[ \t]*\((?<total>\d+)\)[ \t]*\r?$", RegexOptions.Multiline)]
+    private static partial Regex VitestSummaryLine();
+
+    [GeneratedRegex(@"(\d+)\s+failed")]
+    private static partial Regex VitestFailedPart();
+
+    [GeneratedRegex(@"(\d+)\s+passed")]
+    private static partial Regex VitestPassedPart();
+
+    /// <summary>Sums every <c>dotnet test</c> and Vitest summary line; null when there are none.</summary>
     /// <param name="output">Raw verify output.</param>
     public static (int Passed, int Failed, int Total)? Parse(string output)
     {
         int passed = 0, failed = 0, total = 0;
         var found = false;
+        output = AnsiCode().Replace(output, "");
         foreach (Match m in SummaryLine().Matches(output))
         {
             found = true;
@@ -34,8 +47,19 @@ public static partial class TestSummaryParser
             passed += int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
             total += int.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
         }
+        foreach (Match m in VitestSummaryLine().Matches(output))
+        {
+            found = true;
+            var parts = m.Groups["parts"].Value;
+            failed += VitestCount(VitestFailedPart(), parts);
+            passed += VitestCount(VitestPassedPart(), parts);
+            total += int.Parse(m.Groups["total"].Value, CultureInfo.InvariantCulture);
+        }
         return found ? (passed, failed, total) : null;
     }
+
+    private static int VitestCount(Regex part, string parts) =>
+        part.Match(parts) is { Success: true } m ? int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) : 0;
 
     /// <summary>Returns each line starting with <c>SKIPPED</c> (after optional whitespace), trimmed, in order.</summary>
     /// <param name="output">Raw verify output.</param>
