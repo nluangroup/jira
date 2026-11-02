@@ -39,8 +39,68 @@ function Test-Links {
     $problems
 }
 
+function Test-Todo {
+    $file = 'TODO.md'
+    $full = Join-Path $Root $file
+    if (-not (Test-Path -LiteralPath $full)) { return }
+    $categories = 'Critical|High Priority|Medium Priority|Low Priority|Architecture'
+    $expected = 1
+    $lineNo = 0
+    foreach ($line in [IO.File]::ReadAllLines($full, [Text.Encoding]::UTF8)) {
+        $lineNo++
+        if ($line -match '^## ') {
+            if ($line -notmatch "^## ($categories) — \d{4}-\d{2}-\d{2}$") {
+                "${file}:$lineNo heading '$line' must be '## <Category> — YYYY-MM-DD' with Category one of Critical, High Priority, Medium Priority, Low Priority, Architecture"
+            }
+        } elseif ($line -match '^- \[[ x]\]') {
+            if ($line -notmatch '^- \[[ x]\] \*\*#(\d+) — .+\*\*') {
+                "${file}:$lineNo item '$line' must match '- [ ] **#N — <text>**'"
+            } else {
+                $n = [int]$Matches[1]
+                if ($n -ne $expected) { "${file}:$lineNo found #$n, expected #$expected" }
+                $expected = $n + 1
+            }
+        }
+    }
+}
+
+function Test-Decisions {
+    $file = 'docs/decisions.md'
+    $full = Join-Path $Root $file
+    if (-not (Test-Path -LiteralPath $full)) { return }
+    $lines = [IO.File]::ReadAllLines($full, [Text.Encoding]::UTF8)
+    $entries = @()
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^## ') { $entries += $i }
+    }
+    $previousDate = $null
+    for ($e = 0; $e -lt $entries.Count; $e++) {
+        $start = $entries[$e]
+        $end = if ($e + 1 -lt $entries.Count) { $entries[$e + 1] } else { $lines.Count }
+        $heading = $lines[$start]
+        $lineNo = $start + 1
+        if ($heading -notmatch '^## (\d{4}-\d{2}-\d{2}) — .+') {
+            "${file}:$lineNo heading '$heading' must be '## YYYY-MM-DD — <title>'"
+            continue
+        }
+        $date = $Matches[1]
+        if ($previousDate -and $date -gt $previousDate) {
+            "${file}:$lineNo date $date is newer than the entry above ($previousDate); entries must be newest first"
+        }
+        $previousDate = $date
+        $body = $lines[($start + 1)..($end - 1)]
+        foreach ($field in 'What', 'Why', 'Links') {
+            if (-not ($body | Where-Object { $_ -match "^\*\*${field}:\*\*" })) {
+                "${file}:$lineNo entry is missing a **${field}:** line"
+            }
+        }
+    }
+}
+
 $checks = [ordered]@{
     links = { Test-Links }
+    todo = { Test-Todo }
+    decisions = { Test-Decisions }
 }
 
 $failed = $false
