@@ -3,6 +3,7 @@
 Date: 2026-11-02
 Status: Draft for review
 Type: chore
+Revised: 2026-11-02 — the owner dropped Pester. There is no `tests` check and no PowerShell test dependency; `verify.ps1` is checked by hand against throwaway fixtures while it is built.
 
 ## Intent
 
@@ -11,7 +12,8 @@ Type: chore
 ## Goals
 
 - One command, `pwsh ./verify.ps1`, run the same way locally and in CI.
-- It checks the process documents (below) and runs the repo's tests.
+- It checks the process documents (below).
+- It needs nothing beyond PowerShell 7 and git.
 - A GitHub Actions workflow runs it on every PR to `main` and on pushes to `main`.
 - The `main` ruleset requires it to pass.
 - `README.md` describes how to run it and what it checks.
@@ -21,6 +23,7 @@ Type: chore
 
 - Markdown style linting, spell checking, external link checking.
 - Checking Jira (card exists, status) from verify.
+- Automated tests for `verify.ps1` itself, and any PowerShell test framework (Pester). Each check is exercised by hand against throwaway fixtures while it is built, and the results go in the implementation report.
 
 ## Anti-goals
 
@@ -39,18 +42,17 @@ Each check prints `PASS: <name>` or `FAIL: <name> — <file>:<line> <reason>` (o
 | `decisions` | In `docs/decisions.md`: every `## ` heading matches `## YYYY-MM-DD — <title>`; each entry has `**What:**`, `**Why:**` and `**Links:**` lines; dates never increase going down the file (newest first). |
 | `specs` | Every `docs/superpowers/specs/*.md` has a line `Type: feature`, `Type: fix` or `Type: chore`. |
 | `plans` | Every `docs/superpowers/plans/*.md` has a `**Spec:**` line naming a file that exists. |
-| `tests` | Pester 5 runs every `*.Tests.ps1` under `tests/`; any failure fails the check. If Pester 5 or newer is not installed, the check fails with the install command. |
 
 The existing team-workflow spec has no `Type:` line; add `Type: feature` to it as part of this work.
 
 ## CI
 
-- `.github/workflows/verify.yml`, job id `verify`, on `pull_request` to `main` and `push` to `main`, `ubuntu-latest`, PowerShell 7, installs Pester 5, runs `./verify.ps1`.
+- `.github/workflows/verify.yml`, job id `verify`, on `pull_request` to `main` and `push` to `main`, `ubuntu-latest`, runs `./verify.ps1` with PowerShell 7 (preinstalled on the runner).
 - After the workflow has run green on the implementation PR and that PR is merged, add `verify` as a required status check on the `main` ruleset. This is a GitHub setting, applied with the owner's go-ahead.
 
 ## README
 
-The "Verify" section says: run `pwsh ./verify.ps1`; prerequisites (PowerShell 7, `Install-Module Pester -MinimumVersion 5 -Scope CurrentUser`); one line per check; CI runs it on every PR and it must pass to merge; the app's build and tests will be added to the same script. "Setup" lists PowerShell 7 and Pester 5.
+The "Verify" section says: run `pwsh ./verify.ps1` (PowerShell 7); one line per check; CI runs it on every PR and it must pass to merge; the app's build and tests will be added to the same script. "Setup" lists PowerShell 7.
 
 ## Order
 
@@ -59,4 +61,3 @@ Execute after the branch-policy plan (it introduces the `Type:` line this checks
 ## Left to the builder
 
 - Internal structure of `verify.ps1` (functions, regexes), as long as the output format and check names above hold.
-- Test fixture layout under `tests/`.

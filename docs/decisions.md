@@ -2,9 +2,15 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-02 — No PowerShell test framework; verify.ps1 has no automated tests of its own
+
+**What:** Pester is dropped. `verify.ps1` needs only PowerShell 7 and git; its checks are exercised by hand against throwaway fixtures while it is built. This replaces "runs the Pester tests" in the entry below.
+**Why:** Avoid a test-framework dependency (Windows ships an outdated Pester) for a small script; the app's own tests will cover real code.
+**Links:** [spec](superpowers/specs/2026-11-02-verification-design.md), card SCRUM-8
+
 ## 2026-11-02 — verify.ps1 checks the process documents and is required in CI
 
-**What:** `pwsh ./verify.ps1` checks links, `TODO.md`, `decisions.md`, specs and plans, and runs the Pester tests; CI runs it on every PR and the `main` ruleset requires it to pass.
+**What:** `pwsh ./verify.ps1` checks links, `TODO.md`, `decisions.md`, specs and plans; CI runs it on every PR and the `main` ruleset requires it to pass. (Originally also ran Pester tests; see the entry above.)
 **Why:** "Verify passes" is the definition of done, so it has to exist before the app does; enforcing it in CI means the rules hold for everyone, Claude included.
 **Links:** [spec](superpowers/specs/2026-11-02-verification-design.md)
 
