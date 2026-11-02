@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path $Root).Path
 
 function Get-TrackedFiles([string]$Pattern) {
-    git -C $Root ls-files -- $Pattern | ForEach-Object { $_ }
+    git -C $Root -c core.quotepath=off ls-files -- $Pattern | ForEach-Object { $_ }
 }
 
 function Test-Links {
