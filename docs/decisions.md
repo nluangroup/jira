@@ -2,6 +2,12 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-02 — verify.ps1 checks the process documents and is required in CI
+
+**What:** `pwsh ./verify.ps1` checks links, `TODO.md`, `decisions.md`, specs and plans, and runs the Pester tests; CI runs it on every PR and the `main` ruleset requires it to pass.
+**Why:** "Verify passes" is the definition of done, so it has to exist before the app does; enforcing it in CI means the rules hold for everyone, Claude included.
+**Links:** [spec](superpowers/specs/2026-11-02-verification-design.md)
+
 ## 2026-11-02 — Every change goes through a plan PR, for now
 
 **What:** Features, fixes and chores alike get a spec, a plan PR and a Jira card before implementation. Branches are `plan/`, `feature/`, `fix/` or `chore/` prefixed.
