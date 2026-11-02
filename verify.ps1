@@ -97,10 +97,41 @@ function Test-Decisions {
     }
 }
 
+function Test-Specs {
+    foreach ($file in Get-TrackedFiles 'docs/superpowers/specs/*.md') {
+        $lines = [IO.File]::ReadAllLines((Join-Path $Root $file), [Text.Encoding]::UTF8)
+        $typeLines = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -match '^Type:' })
+        if ($typeLines.Count -eq 0) {
+            "${file}:1 missing a 'Type: feature', 'Type: fix' or 'Type: chore' line"
+        } elseif (-not ($typeLines | Where-Object { $lines[$_] -match '^Type: (feature|fix|chore)\s*$' })) {
+            "${file}:$($typeLines[0] + 1) '$($lines[$typeLines[0]])' must be 'Type: feature', 'Type: fix' or 'Type: chore'"
+        }
+    }
+}
+
+function Test-Plans {
+    foreach ($file in Get-TrackedFiles 'docs/superpowers/plans/*.md') {
+        $lines = [IO.File]::ReadAllLines((Join-Path $Root $file), [Text.Encoding]::UTF8)
+        $specLine = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -match '^\*\*Spec:\*\*' })
+        if ($specLine.Count -eq 0) {
+            "${file}:1 missing a **Spec:** line"
+            continue
+        }
+        $lineNo = $specLine[0] + 1
+        if ($lines[$specLine[0]] -notmatch '^\*\*Spec:\*\*\s*`?([^`]*?)`?\s*$' -or $Matches[1] -eq '') {
+            "${file}:$lineNo **Spec:** line names no file"
+        } elseif (-not (Test-Path -LiteralPath (Join-Path $Root $Matches[1]))) {
+            "${file}:$lineNo spec $($Matches[1]) not found"
+        }
+    }
+}
+
 $checks = [ordered]@{
     links = { Test-Links }
     todo = { Test-Todo }
     decisions = { Test-Decisions }
+    specs = { Test-Specs }
+    plans = { Test-Plans }
 }
 
 $failed = $false
