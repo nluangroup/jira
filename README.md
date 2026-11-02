@@ -29,6 +29,7 @@ brainstorm ──► spec + plan + decisions ──► plan PR ──► merged 
 | Path | What |
 |---|---|
 | `CLAUDE.md` | The team workflow |
+| `TODO.md` | Known follow-ups and review findings not yet fixed |
 | `docs/decisions.md` | Big, long-lived decisions |
 | `docs/superpowers/specs/` | Specs from brainstorming |
 | `docs/superpowers/plans/` | Implementation plans |

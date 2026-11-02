@@ -137,6 +137,9 @@ Rehearse at least twice end to end.
 - This repo is the demo codebase: the workflow `CLAUDE.md`, `decisions.md`,
   specs, plans and the app the demo feature changes all live here.
   `nluangroup/agentic-demo` is not used.
+- A `TODO.md` in the repo root holds review findings not fixed in the PR
+  and out-of-scope follow-ups; the card's final report lists their numbers.
+  Its rules are in `CLAUDE.md`.
 - The owner reviews the prepared plan PR themselves; on stage they explain
   that this is the teammate's role.
 
@@ -155,7 +158,6 @@ Rehearse at least twice end to end.
   team's real tooling is Azure DevOps; both move together later.
 - Card updates: one comment per finished plan task, plus a final report
   comment; the description holds the plan section.
-- Deferred review findings go in the final card comment, not `TODO.md`.
 - If rehearsals show Claude skipping card updates, add a small Claude Code
   hook as a reminder. Not built up front.
 - This design follows its own process: its decisions are logged in
