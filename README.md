@@ -23,6 +23,7 @@ brainstorm ──► spec + plan + decisions ──► plan PR ──► merged 
 - [Claude Code](https://claude.com/claude-code) with the Superpowers plugin
 - The Atlassian connector in Claude, with access to `nlundgaard.atlassian.net`
 - GitHub CLI: `gh auth login`
+- [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (`pwsh`), for the verify script
 
 ## Repo layout
 
@@ -36,4 +37,14 @@ brainstorm ──► spec + plan + decisions ──► plan PR ──► merged 
 
 ## Verify
 
-No app yet, so there is no verify command. Until one is added here, Claude stops at the verify step and reports it as a blocker.
+Run `pwsh ./verify.ps1`. It prints `PASS` or `FAIL` for each check and exits 1 if any fail.
+
+| Check | What it makes sure of |
+|---|---|
+| `links` | Relative links in every tracked `.md` file point to files that exist. |
+| `todo` | `TODO.md` items and headings use the agreed format, and item numbers count up from 1 with no gaps. |
+| `decisions` | Each entry in `docs/decisions.md` has a dated heading plus What, Why and Links, newest first. |
+| `specs` | Every spec has a `Type:` line (feature, fix or chore). |
+| `plans` | Every plan has a `**Spec:**` line that names a spec file that exists. |
+
+CI runs the same script on every PR and on pushes to `main`. The `verify` check must pass to merge. When the app exists, its build and tests will be added to this script.

@@ -2,6 +2,7 @@
 
 Date: 2026-11-02
 Status: Draft for review
+Type: feature
 
 ## Intent
 
