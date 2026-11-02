@@ -10,7 +10,7 @@ Humans think, decide and review. Claude does the work and documents it.
 2. **Record big decisions** in `docs/decisions.md` while writing the spec.
 3. **Review intent.** Spec, plan and decision entries go up as one plan PR. A human reviews it. Merging it is the approval.
 4. **Card at approval.** When the plan is executed, Claude creates the Jira card if it doesn't exist yet.
-5. **Do the work** on a feature branch. Claude updates the card as tasks finish.
+5. **Do the work** on an implementation branch. Claude updates the card as tasks finish.
 6. **Hand over.** Claude opens the implementation PR, posts the final report and moves the card to **In Review**.
 7. **Humans finish.** A human reviews and merges the PR and moves the card to **Done**.
 
@@ -24,7 +24,7 @@ Humans think, decide and review. Claude does the work and documents it.
 
 - Spec in `docs/superpowers/specs/`, plan in `docs/superpowers/plans/`.
 - While writing the spec, add an entry to `docs/decisions.md` for each big, long-lived decision a teammate would need months later (format below). Small rulings don't go there.
-- The spec starts with a `Type: feature | fix | chore` line.
+- The spec's header includes a `Type: feature | fix | chore` line (pick one).
 - Put spec, plan and decision entries on a branch `plan/<topic>`, push it and open a PR with `gh pr create`. Then stop: no code is written until that PR is merged.
 
 ### Branches
@@ -38,8 +38,8 @@ Humans think, decide and review. Claude does the work and documents it.
 
 - The type comes from the spec's `Type:` line.
 - Every change, however small, goes through a plan PR and gets a card, for now.
-- Once a branch's PR is merged, never push to it again. Follow-up work starts a new branch.
-- GitHub enforces this on `main`: PRs only, merge commits only, no force pushes, merged branches deleted automatically.
+- Once a branch's PR is merged, never push to it again. Follow-up work starts a new branch. Create every new branch, including a new `plan/<topic>` for a revised plan, fresh from `origin/main`; don't reuse an old local branch of the same name.
+- GitHub enforces PR-only changes to `main`: PRs only, merge commits only, no force pushes or deletion; merged branches are deleted automatically. GitHub does not stop a push that recreates a merged branch.
 
 ### Executing a plan
 
