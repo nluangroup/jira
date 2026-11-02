@@ -2,6 +2,18 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-02 — Every change goes through a plan PR, for now
+
+**What:** Features, fixes and chores alike get a spec, a plan PR and a Jira card before implementation. Branches are `plan/`, `feature/`, `fix/` or `chore/` prefixed.
+**Why:** One path is simpler to learn and to show; revisit if it slows the team down for small changes.
+**Links:** [spec](superpowers/specs/2026-11-02-branch-policy-design.md)
+
+## 2026-11-02 — GitHub enforces PR-only merges to main, with merge commits
+
+**What:** A ruleset on `main` requires a PR (0 approvals) and blocks force pushes and deletion; only merge commits are allowed.
+**Why:** "Never push to main" is enforced rather than an instruction; merge commits keep the task SHAs recorded on Jira cards reachable from `main`.
+**Links:** [spec](superpowers/specs/2026-11-02-branch-policy-design.md)
+
 ## 2026-11-02 — Work with Claude through a shared CLAUDE.md, not a queue service
 
 **What:** The team's Claude workflow is described in a checked-in project `CLAUDE.md` and runs alongside Superpowers. The ClaudeQueue service (unattended runs from a Jira column) is dropped.
