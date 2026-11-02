@@ -109,10 +109,19 @@ Newest first:
 
 Categories: Critical, High Priority, Medium Priority, Low Priority, Architecture.
 
+## Coding standards
+
+- No comments unless the *why* is non-obvious; well-named identifiers explain the what.
+- No defensive error handling for scenarios that cannot happen; validate only at system boundaries.
+- No speculative abstractions: implement what the plan asks, nothing more.
+- Prefer editing existing files over creating new ones.
+
+Language-specific standards are added here when the stack is chosen.
+
 ## Precedence
 
-For the team workflow, this file takes precedence over personal or global `CLAUDE.md` preferences. It does not override platform security rules or tool permissions.
+For the team workflow and coding standards, this file takes precedence over personal or global `CLAUDE.md` preferences. It does not override platform security rules or tool permissions.
 
 - The Superpowers workflow replaces personal subagent routing, review-escalation loops and iteration limits.
 - `TODO.md` follows the rules in this file.
-- Personal coding standards still apply where this file says nothing.
+- Personal preferences may add to this file but never conflict with it. Team standards belong here, so everyone's Claude writes code the same way.
