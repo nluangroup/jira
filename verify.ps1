@@ -7,7 +7,14 @@ $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path $Root).Path
 
 function Get-TrackedFiles([string]$Pattern) {
-    git -C $Root -c core.quotepath=off ls-files -- $Pattern | ForEach-Object { $_ }
+    $files = git -C $Root -c core.quotepath=off ls-files -- $Pattern
+    if ($LASTEXITCODE) { throw "git ls-files failed in $Root" }
+    $files | ForEach-Object { $_ }
+}
+
+function Test-RealDate([string]$Text) {
+    $parsed = [datetime]::MinValue
+    [datetime]::TryParseExact($Text, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, 'None', [ref]$parsed)
 }
 
 function Test-Links {
@@ -49,12 +56,12 @@ function Test-Todo {
     foreach ($line in [IO.File]::ReadAllLines($full, [Text.Encoding]::UTF8)) {
         $lineNo++
         if ($line -match '^## ') {
-            if ($line -notmatch "^## ($categories) — \d{4}-\d{2}-\d{2}$") {
+            if (($line -cnotmatch "^## ($categories) — (\d{4}-\d{2}-\d{2})$") -or -not (Test-RealDate $Matches[2])) {
                 "${file}:$lineNo heading '$line' must be '## <Category> — YYYY-MM-DD' with Category one of Critical, High Priority, Medium Priority, Low Priority, Architecture"
             }
-        } elseif ($line -match '^- \[[ x]\]') {
-            if ($line -notmatch '^- \[[ x]\] \*\*#(\d+) — .+\*\*') {
-                "${file}:$lineNo item '$line' must match '- [ ] **#N — <text>**'"
+        } elseif ($line -match '^[-*+] \[[ xX]\]') {
+            if ($line -cnotmatch '^- \[[ x]\] \*\*#(\d+) — .+\*\*') {
+                "${file}:$lineNo item '$line' must match '- [ ] **#N — <text>**' (items use '- [ ]' or '- [x]')"
             } else {
                 $n = [int]$Matches[1]
                 if ($n -ne $expected) { "${file}:$lineNo found #$n, expected #$expected" }
@@ -79,7 +86,7 @@ function Test-Decisions {
         $end = if ($e + 1 -lt $entries.Count) { $entries[$e + 1] } else { $lines.Count }
         $heading = $lines[$start]
         $lineNo = $start + 1
-        if ($heading -notmatch '^## (\d{4}-\d{2}-\d{2}) — .+') {
+        if (($heading -cnotmatch '^## (\d{4}-\d{2}-\d{2}) — .+') -or -not (Test-RealDate $Matches[1])) {
             "${file}:$lineNo heading '$heading' must be '## YYYY-MM-DD — <title>'"
             continue
         }
@@ -90,7 +97,7 @@ function Test-Decisions {
         $previousDate = $date
         $body = $lines[($start + 1)..($end - 1)]
         foreach ($field in 'What', 'Why', 'Links') {
-            if (-not ($body | Where-Object { $_ -match "^\*\*${field}:\*\*" })) {
+            if (-not ($body | Where-Object { $_ -cmatch "^\*\*${field}:\*\*" })) {
                 "${file}:$lineNo entry is missing a **${field}:** line"
             }
         }
@@ -103,8 +110,15 @@ function Test-Specs {
         $typeLines = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -match '^Type:' })
         if ($typeLines.Count -eq 0) {
             "${file}:1 missing a 'Type: feature', 'Type: fix' or 'Type: chore' line"
-        } elseif (-not ($typeLines | Where-Object { $lines[$_] -match '^Type: (feature|fix|chore)\s*$' })) {
-            "${file}:$($typeLines[0] + 1) '$($lines[$typeLines[0]])' must be 'Type: feature', 'Type: fix' or 'Type: chore'"
+        } else {
+            foreach ($i in $typeLines) {
+                if ($lines[$i] -cnotmatch '^Type: (feature|fix|chore)\s*$') {
+                    "${file}:$($i + 1) '$($lines[$i])' must be 'Type: feature', 'Type: fix' or 'Type: chore'"
+                }
+            }
+            if ($typeLines.Count -gt 1) {
+                "${file}:$($typeLines[1] + 1) more than one Type: line; exactly one is allowed"
+            }
         }
     }
 }
@@ -118,10 +132,13 @@ function Test-Plans {
             continue
         }
         $lineNo = $specLine[0] + 1
-        if ($lines[$specLine[0]] -notmatch '^\*\*Spec:\*\*\s*`?([^`]*?)`?\s*$' -or $Matches[1] -eq '') {
+        if ($lines[$specLine[0]] -notmatch '^\*\*Spec:\*\*\s*(?:`([^`]+)`|(\S+))') {
             "${file}:$lineNo **Spec:** line names no file"
-        } elseif (-not (Test-Path -LiteralPath (Join-Path $Root $Matches[1]))) {
-            "${file}:$lineNo spec $($Matches[1]) not found"
+        } else {
+            $spec = if ($Matches[1]) { $Matches[1] } else { $Matches[2] }
+            if (-not (Test-Path -LiteralPath (Join-Path $Root $spec) -PathType Leaf)) {
+                "${file}:$lineNo spec $spec not found"
+            }
         }
     }
 }
