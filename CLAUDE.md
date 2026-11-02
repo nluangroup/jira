@@ -75,7 +75,7 @@ If a required skill, connector, permission or the verify command is unavailable 
   Done: <one line per plan task>
   Verification: <pass/fail, test counts>
   Rulings: <implementation choices made within scope, or "none">
-  Deferred: <review findings not fixed, or "none">
+  Deferred: <TODO.md item numbers added by this work, or "none">
   Decisions: <links to docs/decisions.md entries, if any>
   PR: <link> (branch <name>)
   ```
@@ -92,10 +92,27 @@ Newest first:
 **Links:** [spec](<relative path>), card <SCRUM-n if known>
 ```
 
+### TODO.md
+
+`TODO.md` in the repo root is the team's list of known follow-ups: review findings not fixed in the PR, and issues found during the work that are outside the plan's scope.
+
+- Append new items with the work's branch, so they are reviewed in its PR. Read `TODO.md` before planning work in the same area.
+- Number items sequentially across the whole file (`#N`); never reuse a number.
+- Mark finished items `[x]`; never delete them.
+- Only the main Claude session writes to `TODO.md`. Subagents report findings to it.
+
+```
+## <Category> — YYYY-MM-DD
+- [ ] **#N — <description>** (`path/to/file:~line`)
+  <details if needed>
+```
+
+Categories: Critical, High Priority, Medium Priority, Low Priority, Architecture.
+
 ## Precedence
 
 For the team workflow, this file takes precedence over personal or global `CLAUDE.md` preferences. It does not override platform security rules or tool permissions.
 
 - The Superpowers workflow replaces personal subagent routing, review-escalation loops and iteration limits.
-- Don't use `TODO.md`. Deferred findings go in the card's final report; big decisions go in `docs/decisions.md`.
+- `TODO.md` follows the rules in this file.
 - Personal coding standards still apply where this file says nothing.
