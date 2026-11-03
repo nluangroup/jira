@@ -22,6 +22,10 @@ export class Identity {
 }
 
 function read(): Employee | null {
-  const raw = localStorage.getItem(storageKey);
-  return raw ? (JSON.parse(raw) as Employee) : null;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    return raw ? (JSON.parse(raw) as Employee) : null;
+  } catch {
+    return null;
+  }
 }
