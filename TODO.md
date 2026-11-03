@@ -42,7 +42,7 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
 - [ ] **SCRUM-15/2 — Switching to full doesn't say what to do with a pushed light branch** (`CLAUDE.md`, "The light path")
   If its PR was open, the branch is on the remote; say whether to leave or delete it.
 - [ ] **SCRUM-15/3 — Resuming on the light path comments the branch name again** (`CLAUDE.md`, "The light path" step 4)
-- [ ] **SCRUM-17/1 — "approval, verification and merge rules" doesn't name the rules** (`CLAUDE.md`, "Executing an epic")
+- [x] **SCRUM-17/1 — "approval, verification and merge rules" doesn't name the rules** (`CLAUDE.md`, "Executing an epic")
   They live in "Executing a plan (full path)": approved plan on `origin/main`, verify before every commit and PR, never approve or merge, never push to `main`. Name them, or say they apply to every task the skill runs, when the skill lands (SCRUM-16).
-- [ ] **SCRUM-17/2 — Epic "resume" vs. card "resume"** (`CLAUDE.md`, "Executing an epic"; the `executing-epics` skill)
+- [x] **SCRUM-17/2 — Epic "resume" vs. card "resume"** (`CLAUDE.md`, "Executing an epic"; the `executing-epics` skill)
   The light path and "Executing a plan" use "resume this card's work" for one card; the skill should say how resuming an epic relates.

@@ -17,6 +17,7 @@ That's the full path, for features and open-ended work. Small, agreed fixes and 
 
 - **Plans are reviewed before code.** Features and open-ended work go through a plan PR first: a teammate reviews the spec and plan, and merging it is the approval. Small, agreed fixes and chores go through one PR.
 - **Claude documents as it works.** Each piece of agreed work gets a Jira card in `SCRUM` with what was planned, what was done, the decisions made and the PR link.
+- **Bigger work can be an epic.** An epic is approved once in a plan PR, then delivered as one PR per task.
 - **Big decisions are kept in the repo.** [`docs/decisions.md`](docs/decisions.md) records the decisions a teammate needs months later.
 - **Humans finish.** A human merges the PR, and Claude then moves the card to Done. Claude never merges.
 
