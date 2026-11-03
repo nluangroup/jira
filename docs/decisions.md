@@ -2,6 +2,18 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — The demo app is lunch registration on the team's stack, in this repo
+
+**What:** An ASP.NET Core API (`src/`, SQLite via EF Core, xUnit) and an Angular app (`web/`, Vitest) live in this repo; `verify.ps1` and CI check both. Employees tick office lunches on a month calendar and count beverages per month; the office manager sees and exports monthly totals.
+**Why:** Colleagues see code that looks like theirs, and the work splits into an epic with real dependencies for the pitch.
+**Links:** [spec](superpowers/specs/2026-11-03-lunch-registration-design.md), card SCRUM-9
+
+## 2026-11-03 — Demo identity: pick your name, the API trusts it
+
+**What:** No real authentication: the app asks "Who are you?", remembers the choice, and sends the employee id in a request header. The README states this is not security.
+**Why:** Real sign-in (Entra ID) needs app registrations and setup that add nothing to the pitch.
+**Links:** [spec](superpowers/specs/2026-11-03-lunch-registration-design.md), card SCRUM-9
+
 ## 2026-11-03 — Epics: approve once, one PR per task, Claude continues past open PRs
 
 **What:** Work needing several separately reviewable PRs becomes an epic: one plan PR approves all its tasks, each task gets a child card and a PR, and the `executing-epics` skill works through eligible tasks without asking per task. Dependent tasks wait for real merges (no stacked branches); shared files are ordered in the plan. Claude pulls the user back in only when nothing more can move without a human.
