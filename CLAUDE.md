@@ -34,13 +34,13 @@ There are two paths (see "Choosing a path"). The steps below are the full path; 
   - for each task: an ID (`T1`, `T2`, …), title, type (feature, fix or chore), acceptance criteria, and dependencies by task ID;
   - the intended execution order;
   - any verification that needs a human, per task;
-  - file ordering: when two tasks touch the same files, which goes first (the second depends on the first).
+  - file ordering: each file is owned by the task that creates it; a task that edits a file another task owns depends on that task (with the one exception below).
 - Each epic task is small enough for one reviewable PR.
 - Keep epic dependencies to the ones that are real, so an epic started at the end of the day keeps delivering PRs while nobody is there to merge:
-  - A task depends on another only when it needs that task's merged code, or edits a file that task creates or owns. Needing data or behaviour the other task will provide isn't enough: tasks build against contracts the plan fixes (routes, payloads, interfaces) and test against stubs or seeded data.
-  - Put shared files, entities and registration points in an early skeleton task, so later tasks depend on it rather than on each other.
-  - Adding one registration line to a skeleton-owned file (for example a `Map…Endpoints()` call in `Program.cs`) doesn't create a dependency. If that leaves a PR in conflict after another merges, the card's owner merges `origin/main` into the branch and resolves it, as in "When review asks for changes".
-  - A human check that needs several tasks merged names them; it waits on the epic's outstanding list, not on the tasks' dependencies.
+  - A task depends on another only when it needs that task's merged code, or edits a file that task owns. Needing data or behaviour the other task will provide isn't enough: tasks build against contracts the plan fixes (routes, payloads, interfaces) and test against stubs or seeded data. Integration across tasks is then checked by a later task that depends on both, or by a human check.
+  - Put shared files, entities and registration points in a skeleton task (usually `T1`) that the other tasks depend on, rather than on each other.
+  - Exception: adding one registration line to a skeleton-owned file (for example a `Map…Endpoints()` call in `Program.cs`) doesn't create a dependency, as long as the plan names it. Overlap the plan names isn't "unexpected file overlap" for `executing-epics`. If a PR is left in conflict after another merges, it stays open; the card's owner, or Claude when resuming the epic, merges `origin/main` into the branch, resolves the conflict, runs verify and pushes, as in "When review asks for changes".
+  - A human check that needs several tasks merged names them and goes on the epic card's outstanding list, not a child's; it stays there until those tasks are merged and the user confirms it. It doesn't add dependencies.
 
 ### Branches
 
