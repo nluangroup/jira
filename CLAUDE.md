@@ -6,6 +6,8 @@ Humans think, decide and review. Claude does the work and documents it.
 
 ## The flow
 
+There are two paths (see "Choosing a path"). The steps below are the full path; the light path is in "The light path".
+
 1. **Think together.** Brainstorm a spec and a plan with Superpowers (`brainstorming`, then `writing-plans`).
 2. **Record big decisions** in `docs/decisions.md` while writing the spec.
 3. **Review intent.** Spec, plan and decision entries go up as one plan PR. A human reviews it. Merging it is the approval.
@@ -37,10 +39,30 @@ Humans think, decide and review. Claude does the work and documents it.
 | `fix/SCRUM-<n>-<slug>` | Implementing an approved fix plan |
 | `chore/SCRUM-<n>-<slug>` | Implementing an approved chore plan: tooling, dependencies, docs, `CLAUDE.md` |
 
-- The type comes from the spec's `Type:` line.
-- Every change, however small, goes through a plan PR and gets a card, for now.
+- The type comes from the spec's `Type:` line (full path) or is the one agreed with the path (light path).
+- Every change gets a card and a PR. Full-path changes go through a plan PR first; light-path changes go straight to an implementation branch.
 - Once a branch's PR is merged, never push to it again. Follow-up work starts a new branch. Create every new branch, including a new `plan/<topic>` for a revised plan, fresh from `origin/main`; don't reuse an old local branch of the same name.
 - GitHub enforces PR-only changes to `main`: PRs only, merge commits only, no force pushes or deletion; merged branches are deleted automatically. GitHub does not stop a push that recreates a merged branch.
+
+### Choosing a path
+
+- **Light:** one clear change whose what and why fit in a PR description. Process changes to `CLAUDE.md` count.
+- **Full:** new features, work spanning several parts of the code, or anything where the approach is still open and benefits from a brainstorm before code exists.
+- When the work is agreed, propose a path and let the user confirm. Record it on the card as a comment, exactly `Path: light` or `Path: full`. When unsure, ask.
+
+### The light path
+
+1. Find or create the card (as in "Keeping the board in sync"), move it to **In Progress** and comment the branch name.
+2. Create `<type>/SCRUM-<n>-<short-slug>` from `origin/main`; `<type>` is agreed with the path.
+3. Make the change directly, without per-task subagents. If it makes a big, long-lived decision, add the `docs/decisions.md` entry in the same branch.
+4. Run the repo's verify command before every commit.
+5. Dispatch one reviewer subagent on the branch diff. Fix Critical and Important findings; append the rest to `TODO.md`.
+6. Push and open the PR with `gh pr create`. The description says what changes and why, and links the card.
+7. Post the final report on the card (format in "The card"; `Rulings` may be "none") and move it to **In Review**.
+
+If the change grows beyond light (the approach becomes open, or it spans several parts of the code), stop, comment on the card, and switch to the full path: write a spec and plan and open a plan PR.
+
+Never approve or merge a PR; move the card to **Done** only after a human has merged it.
 
 ### Executing a plan
 
@@ -73,7 +95,7 @@ If a required skill, connector, permission or the verify command is unavailable 
 ### Keeping the board in sync
 
 - **Cards for agreed work.** When the user agrees to a piece of work that has no card, search `SCRUM` first so the same work doesn't get two cards. If none exists, create a **To Do** card (see "The card"): assignee, summary and a short description ending `No plan yet`. The summary is the agreed work's name. Tell the user its key.
-- **Plan PR.** When opening a plan PR, first search `SCRUM` for the work's card: assigned to the user, description ending `No plan yet`, matching summary (or ask the user). If none exists, create it as in "Cards for agreed work". Then replace `No plan yet` with `Plan: <plan path>` and comment the plan PR link on the card.
+- **Plan PR (full path).** When opening a plan PR, first search `SCRUM` for the work's card: assigned to the user, description ending `No plan yet`, matching summary (or ask the user). If none exists, create it as in "Cards for agreed work". Then replace `No plan yet` with `Plan: <plan path>` and comment the plan PR link on the card.
 - **Done when merged.** At the start of each session's work in this repo, and whenever asked, search the user's own cards in **In Review**: `project = SCRUM AND status = "In Review" AND assignee = currentUser()`. Take the PR link from the card's latest final report `PR:` line and check it with `gh pr view <link> --json state`. If merged, move the card to **Done** and comment `PR merged — moved to Done`. If closed without merging, leave the card and tell the user. If still open, leave it. If a card has no `PR:` line, leave it and tell the user.
 
 ### The card
