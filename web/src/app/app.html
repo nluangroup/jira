@@ -1,0 +1,16 @@
+<header>
+  <strong>Lunch</strong>
+  @if (identity.current(); as employee) {
+    <nav>
+      <a routerLink="/month" routerLinkActive="active">My month</a>
+      @if (identity.isManager()) {
+        <a routerLink="/report" routerLinkActive="active">Report</a>
+      }
+    </nav>
+    <span class="person">{{ employee.name }}</span>
+    <button type="button" (click)="switchPerson()">Switch person</button>
+  }
+</header>
+<main>
+  <router-outlet />
+</main>

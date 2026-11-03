@@ -1,0 +1,21 @@
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ccc;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.active {
+  font-weight: bold;
+}
+
+main {
+  padding: 1rem;
+}

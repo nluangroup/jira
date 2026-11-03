@@ -208,7 +208,17 @@ Categories: Critical, High Priority, Medium Priority, Low Priority, Architecture
 - No speculative abstractions: implement what the plan asks, nothing more.
 - Prefer editing existing files over creating new ones.
 
-Language-specific standards are added here when the stack is chosen.
+### C#
+
+- Target `net10.0`.
+- Use `async`/`await` and thread a `CancellationToken` through async call chains; never block with `.Result` or `.Wait()`.
+- Public types and members have XML doc comments.
+- Use `System.Text.Json`.
+
+### Angular
+
+- Standalone components with signals; no NgModules.
+- Write Vitest tests alongside the code.
 
 ## Precedence
 

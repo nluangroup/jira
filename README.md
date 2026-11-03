@@ -34,6 +34,8 @@ That's the full path, for features and open-ended work. Small, agreed fixes and 
 |---|---|
 | `CLAUDE.md` | The team workflow |
 | `TODO.md` | Known follow-ups and review findings not yet fixed |
+| `src/Lunch.Api/`, `tests/Lunch.Api.Tests/` | The lunch API and its tests |
+| `web/` | The Angular app |
 | `docs/decisions.md` | Big, long-lived decisions |
 | `docs/superpowers/specs/` | Specs from brainstorming |
 | `docs/superpowers/plans/` | Implementation plans |
@@ -49,5 +51,23 @@ Run `pwsh ./verify.ps1`. It prints `PASS` or `FAIL` for each check and exits 1 i
 | `decisions` | Each entry in `docs/decisions.md` has a dated heading plus What, Why and Links, newest first. |
 | `specs` | Every spec has a `Type:` line (feature, fix or chore). |
 | `plans` | Every plan has a `**Spec:**` line that names a spec file that exists. |
+| `api-build` | `dotnet build Lunch.slnx` succeeds with warnings as errors. |
+| `api-test` | `dotnet test Lunch.slnx` passes. |
+| `web-lint` | `npm run lint` in `web/` passes (runs `npm ci` first if `node_modules` is missing). |
+| `web-test` | `npm test` in `web/` runs the Vitest tests once and they pass. |
+| `web-build` | `npm run build` in `web/` succeeds. |
 
-CI runs the same script on every PR and on pushes to `main`. The `verify` check must pass to merge. When the app exists, its build and tests will be added to this script.
+CI runs the same script on every PR and on pushes to `main`, with .NET 10 and Node 24 installed. The `verify` check must pass to merge.
+
+## Run the app
+
+The lunch registration demo is an ASP.NET Core API (`src/Lunch.Api`) and an Angular app (`web/`). You need the .NET 10 SDK and Node 24.
+
+```
+dotnet run --project src/Lunch.Api     # http://localhost:5080
+cd web && npm ci && npm start          # http://localhost:4200, proxies /api to the API
+```
+
+The API creates `src/Lunch.Api/lunch.db` on first start and seeds the employees listed in `src/Lunch.Api/appsettings.json`.
+
+The demo identity is not security. The "Who are you?" page lets anyone pick any employee, and the API trusts the `X-Employee-Id` header it is sent.
