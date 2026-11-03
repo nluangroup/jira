@@ -2,9 +2,15 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — TODO.md items get card-scoped IDs
+
+**What:** New `TODO.md` items are numbered `SCRUM-<n>/<k>`, counting from 1 per card; `verify.ps1` checks them. Items `#1`–`#17` keep their numbers.
+**Why:** Global `#N` numbers collide when two branches each add an item: both PRs pass verify, then `main` fails.
+**Links:** card SCRUM-15, [PR #12](https://github.com/nluangroup/jira/pull/12)
+
 ## 2026-11-03 — Small changes take a light path: card, one PR, one review
 
-**What:** Small changes skip the spec and plan PR: a card, one PR whose description states what and why, Claude implementing directly, one reviewer subagent, `verify`. Bigger or open-ended work keeps the full path. Claude proposes the path; the user confirms. This replaces "Every change goes through a plan PR, for now".
+**What:** Small changes skip the spec and plan PR: a card, one PR whose description states what and why, Claude implementing directly, one reviewer subagent, `verify`. Bigger or open-ended work keeps the full path. Claude proposes the path; the user confirms. This replaces "Every change goes through a plan PR, for now". Tightened on 2026-11-03 (SCRUM-15): every new feature takes the full path; the light path is for bounded fixes and chores with an agreed approach.
 **Why:** Two PRs and five subagent runs for a 16-line change (SCRUM-7) is too heavy for the team to adopt; the card, the reviewed PR and `verify` are what matter.
 **Links:** [spec](superpowers/specs/2026-11-03-light-path-design.md), card SCRUM-14
 

@@ -52,6 +52,7 @@ function Test-Todo {
     if (-not (Test-Path -LiteralPath $full)) { return }
     $categories = 'Critical|High Priority|Medium Priority|Low Priority|Architecture'
     $expected = 1
+    $expectedPerCard = @{}
     $lineNo = 0
     foreach ($line in [IO.File]::ReadAllLines($full, [Text.Encoding]::UTF8)) {
         $lineNo++
@@ -60,12 +61,18 @@ function Test-Todo {
                 "${file}:$lineNo heading '$line' must be '## <Category> — YYYY-MM-DD' with Category one of Critical, High Priority, Medium Priority, Low Priority, Architecture"
             }
         } elseif ($line -match '^[-*+] \[[ xX]\]') {
-            if ($line -cnotmatch '^- \[[ x]\] \*\*#(\d+) — .+\*\*') {
-                "${file}:$lineNo item '$line' must match '- [ ] **#N — <text>**' (items use '- [ ]' or '- [x]')"
-            } else {
+            if ($line -cmatch '^- \[[ x]\] \*\*SCRUM-(\d+)/(\d+) — .+\*\*') {
+                $card = [int]$Matches[1]
+                $k = [int]$Matches[2]
+                $want = if ($expectedPerCard.ContainsKey($card)) { $expectedPerCard[$card] } else { 1 }
+                if ($k -ne $want) { "${file}:$lineNo found SCRUM-$card/$k, expected SCRUM-$card/$want" }
+                $expectedPerCard[$card] = $k + 1
+            } elseif ($line -cmatch '^- \[[ x]\] \*\*#(\d+) — .+\*\*') {
                 $n = [int]$Matches[1]
                 if ($n -ne $expected) { "${file}:$lineNo found #$n, expected #$expected" }
                 $expected = $n + 1
+            } else {
+                "${file}:$lineNo item '$line' must match '- [ ] **SCRUM-<n>/<k> — <text>**' or a legacy '- [ ] **#N — <text>**' (items use '- [ ]' or '- [x]')"
             }
         }
     }

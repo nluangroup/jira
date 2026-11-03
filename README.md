@@ -13,8 +13,10 @@ brainstorm ──► spec + plan + decisions ──► plan PR ──► merged 
                                                          updates Jira card
 ```
 
-- **Plans are reviewed before code.** Small changes go through one PR. Bigger ones go through a plan PR first: a teammate reviews the spec and plan, and merging it is the approval.
-- **Claude documents as it works.** Each approved plan gets a Jira card in `SCRUM` with the plan, what was done, the decisions made and the PR link.
+That's the full path, for features and open-ended work. Small, agreed fixes and chores take the light path: a card and one PR, with no plan PR.
+
+- **Plans are reviewed before code.** Features and open-ended work go through a plan PR first: a teammate reviews the spec and plan, and merging it is the approval. Small, agreed fixes and chores go through one PR.
+- **Claude documents as it works.** Each piece of agreed work gets a Jira card in `SCRUM` with what was planned, what was done, the decisions made and the PR link.
 - **Big decisions are kept in the repo.** [`docs/decisions.md`](docs/decisions.md) records the decisions a teammate needs months later.
 - **Humans finish.** A human merges the PR, and Claude then moves the card to Done. Claude never merges.
 
@@ -42,7 +44,7 @@ Run `pwsh ./verify.ps1`. It prints `PASS` or `FAIL` for each check and exits 1 i
 | Check | What it makes sure of |
 |---|---|
 | `links` | Relative links in every tracked `.md` file point to files that exist. |
-| `todo` | `TODO.md` items and headings use the agreed format, and item numbers count up from 1 with no gaps. |
+| `todo` | `TODO.md` items and headings use the agreed format. Card-scoped IDs (`SCRUM-<n>/<k>`) count up from 1 per card, and legacy `#N` items count up from 1, with no gaps. |
 | `decisions` | Each entry in `docs/decisions.md` has a dated heading plus What, Why and Links, newest first. |
 | `specs` | Every spec has a `Type:` line (feature, fix or chore). |
 | `plans` | Every plan has a `**Spec:**` line that names a spec file that exists. |
