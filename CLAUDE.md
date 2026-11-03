@@ -9,7 +9,7 @@ Humans think, decide and review. Claude does the work and documents it.
 1. **Think together.** Brainstorm a spec and a plan with Superpowers (`brainstorming`, then `writing-plans`).
 2. **Record big decisions** in `docs/decisions.md` while writing the spec.
 3. **Review intent.** Spec, plan and decision entries go up as one plan PR. A human reviews it. Merging it is the approval.
-4. **Card.** The card may already exist from when the work was agreed. If not, Claude creates it when the plan is executed.
+4. **Card.** Claude creates a To Do card when work is agreed, so it may already exist. If not, Claude creates it when the plan is executed.
 5. **Do the work** on an implementation branch. Claude updates the card as tasks finish.
 6. **Hand over.** Claude opens the implementation PR, posts the final report and moves the card to **In Review**.
 7. **Humans finish.** A human reviews and merges the PR. Claude then moves the card to **Done**.
@@ -26,7 +26,7 @@ Humans think, decide and review. Claude does the work and documents it.
 - While writing the spec, add an entry to `docs/decisions.md` for each big, long-lived decision a teammate would need months later (format below). Small rulings don't go there.
 - The spec's header includes a `Type: feature | fix | chore` line (pick one).
 - Put spec, plan and decision entries on a branch `plan/<topic>`, push it and open a PR with `gh pr create`. Then stop: no code is written until that PR is merged.
-- When opening the plan PR, update the work's card as in "Keeping the board in sync".
+- When opening the plan PR, link the work's card as in "Keeping the board in sync".
 
 ### Branches
 
@@ -47,7 +47,7 @@ Humans think, decide and review. Claude does the work and documents it.
 When asked to execute a plan:
 
 1. `git fetch origin`. Execute the plan and spec **as they are on `origin/main`**. If the plan isn't there, it isn't approved: say so and stop. Local or unmerged changes to either document are not approved; don't execute them.
-2. Find the card: search `SCRUM` with JQL `project = SCRUM AND text ~ "\"<plan path>\""`. If there is none, create it (see "The card") and tell the user its key.
+2. Find the card: search `SCRUM` with JQL `project = SCRUM AND text ~ "\"<plan path>\""`. If there is none, create it (see "The card") and tell the user its key. If one is found, update its description to the format in "The card" (spec and plan links, `Approved commit:`), replacing the bare `Plan:` line.
 3. If the card shows an implementation branch, an open PR or someone already working on it, stop and ask whether to resume or coordinate.
 4. Create a branch `<type>/SCRUM-<n>-<short-slug>` from `origin/main`, where `<type>` is the spec's `Type:` line. If the spec has no `Type:` line, stop and ask. If the current checkout has unrelated uncommitted work, use a separate worktree. Never discard or overwrite anyone's changes.
 5. Move the card to **In Progress** and comment the branch name.
@@ -72,9 +72,9 @@ If a required skill, connector, permission or the verify command is unavailable 
 
 ### Keeping the board in sync
 
-- **Cards for agreed work.** When the user agrees to a piece of work that has no card, search `SCRUM` first so the same work doesn't get two cards. If none exists, create a **To Do** card (see "The card"): assignee, summary and a short description ending `No plan yet`. Tell the user its key.
-- **Plan PR.** When opening a plan PR for work that has a card, replace `No plan yet` in the description with `Plan: <plan path>` and comment the plan PR link on the card.
-- **Done when merged.** At the start of each session's work in this repo, and whenever asked, check the cards in **In Review**. If the implementation PR (the `PR:` link in the card's final report) is merged, move the card to **Done** and comment `PR merged — moved to Done`. If it was closed without merging, leave the card and tell the user. If it is still open, leave it.
+- **Cards for agreed work.** When the user agrees to a piece of work that has no card, search `SCRUM` first so the same work doesn't get two cards. If none exists, create a **To Do** card (see "The card"): assignee, summary and a short description ending `No plan yet`. The summary is the agreed work's name. Tell the user its key.
+- **Plan PR.** When opening a plan PR, first search `SCRUM` for the work's card: assigned to the user, description ending `No plan yet`, matching summary (or ask the user). If none exists, create it as in "Cards for agreed work". Then replace `No plan yet` with `Plan: <plan path>` and comment the plan PR link on the card.
+- **Done when merged.** At the start of each session's work in this repo, and whenever asked, search the user's own cards in **In Review**: `project = SCRUM AND status = "In Review" AND assignee = currentUser()`. Take the PR link from the card's latest final report `PR:` line and check it with `gh pr view <link> --json state`. If merged, move the card to **Done** and comment `PR merged — moved to Done`. If closed without merging, leave the card and tell the user. If still open, leave it. If a card has no `PR:` line, leave it and tell the user.
 
 ### The card
 
