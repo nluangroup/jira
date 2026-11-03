@@ -16,7 +16,7 @@ brainstorm ──► spec + plan + decisions ──► plan PR ──► merged 
 - **Plans are reviewed before code.** A teammate reviews the spec and plan as a small PR. Merging it is the approval.
 - **Claude documents as it works.** Each approved plan gets a Jira card in `SCRUM` with the plan, what was done, the decisions made and the PR link.
 - **Big decisions are kept in the repo.** [`docs/decisions.md`](docs/decisions.md) records the decisions a teammate needs months later.
-- **Humans finish.** Claude never merges and never moves a card to Done.
+- **Humans finish.** A human merges the PR, and Claude then moves the card to Done. Claude never merges.
 
 ## Setup
 

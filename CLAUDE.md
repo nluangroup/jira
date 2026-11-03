@@ -9,10 +9,10 @@ Humans think, decide and review. Claude does the work and documents it.
 1. **Think together.** Brainstorm a spec and a plan with Superpowers (`brainstorming`, then `writing-plans`).
 2. **Record big decisions** in `docs/decisions.md` while writing the spec.
 3. **Review intent.** Spec, plan and decision entries go up as one plan PR. A human reviews it. Merging it is the approval.
-4. **Card at approval.** When the plan is executed, Claude creates the Jira card if it doesn't exist yet.
+4. **Card.** The card may already exist from when the work was agreed. If not, Claude creates it when the plan is executed.
 5. **Do the work** on an implementation branch. Claude updates the card as tasks finish.
 6. **Hand over.** Claude opens the implementation PR, posts the final report and moves the card to **In Review**.
-7. **Humans finish.** A human reviews and merges the PR and moves the card to **Done**.
+7. **Humans finish.** A human reviews and merges the PR. Claude then moves the card to **Done**.
 
 ## Rules for Claude
 
@@ -26,6 +26,7 @@ Humans think, decide and review. Claude does the work and documents it.
 - While writing the spec, add an entry to `docs/decisions.md` for each big, long-lived decision a teammate would need months later (format below). Small rulings don't go there.
 - The spec's header includes a `Type: feature | fix | chore` line (pick one).
 - Put spec, plan and decision entries on a branch `plan/<topic>`, push it and open a PR with `gh pr create`. Then stop: no code is written until that PR is merged.
+- When opening the plan PR, update the work's card as in "Keeping the board in sync".
 
 ### Branches
 
@@ -55,7 +56,7 @@ When asked to execute a plan:
 8. Push the branch and open the PR with `gh pr create`. The PR body links the card.
 9. Post the final report comment on the card and move it to **In Review**.
 
-Never approve or merge a PR. Never move a card to **Done**. Never push to `main`.
+Never approve or merge a PR. Move a card to **Done** only after a human has merged its PR. Never push to `main`.
 
 ### When the work changes the plan
 
@@ -68,6 +69,12 @@ The person who owns the card resumes the work on the same branch. Move the card 
 ### When something is missing or fails
 
 If a required skill, connector, permission or the verify command is unavailable or fails, stop and report the blocker. Don't substitute another tool, skip the step or claim the work is done. A verify failure counts as failing whether this work caused it or it was already there; say which.
+
+### Keeping the board in sync
+
+- **Cards for agreed work.** When the user agrees to a piece of work that has no card, search `SCRUM` first so the same work doesn't get two cards. If none exists, create a **To Do** card (see "The card"): assignee, summary and a short description ending `No plan yet`. Tell the user its key.
+- **Plan PR.** When opening a plan PR for work that has a card, replace `No plan yet` in the description with `Plan: <plan path>` and comment the plan PR link on the card.
+- **Done when merged.** At the start of each session's work in this repo, and whenever asked, check the cards in **In Review**. If the implementation PR (the `PR:` link in the card's final report) is merged, move the card to **Done** and comment `PR merged — moved to Done`. If it was closed without merging, leave the card and tell the user. If it is still open, leave it.
 
 ### The card
 
