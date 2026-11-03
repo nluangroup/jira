@@ -23,3 +23,7 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
 - [ ] **#9 — A `Type:` line inside a code block or prose counts** (`verify.ps1`, `specs`)
 - [ ] **#10 — `**Spec:**` as a Markdown link is rejected; unquoted paths with spaces don't resolve; a folder target says "not found"** (`verify.ps1`, `plans`)
 - [ ] **#11 — The verify workflow has no `permissions: contents: read`** (`.github/workflows/verify.yml`)
+
+## Low Priority — 2026-11-03
+- [ ] **#12 — Card summary rule differs for early cards** (`CLAUDE.md`, "Keeping the board in sync" and "The card")
+  A card created when work is agreed uses the work's name; "The card" says the summary is the plan title, and "Find the card" doesn't update the summary.
