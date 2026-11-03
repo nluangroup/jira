@@ -35,3 +35,5 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   The diagram and "Each approved plan gets a Jira card" predate the light path.
 - [ ] **#16 — "Executing a plan" heading isn't labelled full path** (`CLAUDE.md`)
   Its trigger and "The flow" already scope it; append "(full path)" next time the section is edited.
+- [ ] **#17 — Switching light to full leaves `Path: light — no plan` on the card** (`CLAUDE.md`, "The light path" and "Keeping the board in sync")
+  The plan-PR lookup matches `No plan yet`, so a later session might not find the card. Restore `No plan yet` (or name the card key) when switching.
