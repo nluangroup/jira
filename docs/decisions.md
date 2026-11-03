@@ -6,7 +6,7 @@ Big, long-lived decisions a teammate needs months later. One entry per decision,
 
 **What:** An epic task depends on another only when it needs that task's merged code or edits a file it owns; tasks build against contracts fixed in the plan, and shared files live in a skeleton task. A one-line registration in a skeleton-owned file doesn't create a dependency. Stacked branches and Claude merging stay out.
 **Why:** The team wants to start an epic when leaving the office and find several PRs in the morning; a chain of dependencies stops the run at the first merge.
-**Links:** card SCRUM-23
+**Links:** card SCRUM-23, [PR #18](https://github.com/nluangroup/jira/pull/18)
 
 ## 2026-11-03 — The demo app is lunch registration on the team's stack, in this repo
 
