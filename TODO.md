@@ -46,3 +46,7 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   They live in "Executing a plan (full path)": approved plan on `origin/main`, verify before every commit and PR, never approve or merge, never push to `main`. Name them, or say they apply to every task the skill runs, when the skill lands (SCRUM-16).
 - [x] **SCRUM-17/2 — Epic "resume" vs. card "resume"** (`CLAUDE.md`, "Executing an epic"; the `executing-epics` skill)
   The light path and "Executing a plan" use "resume this card's work" for one card; the skill should say how resuming an epic relates.
+- [ ] **SCRUM-16/1 — Mixed stops are covered only by the general stop line** (`.claude/skills/executing-epics/SKILL.md`, "Stop conditions")
+  One task blocked while the rest wait on merges; S8 shows it copes, but the stop report could name both reasons explicitly.
+- [ ] **SCRUM-16/2 — Retyping to Epic assumes the work's card already exists** (`CLAUDE.md`, "Keeping the board in sync")
+  "Cards for agreed work" normally creates it first; say so in the Epics bullet.
