@@ -58,14 +58,14 @@ There are two paths (see "Choosing a path"). The steps below are the full path; 
 3. `git fetch origin`, then create `<type>/SCRUM-<n>-<short-slug>` from `origin/main`; `<type>` is agreed with the path. If the checkout has unrelated uncommitted work, use a separate worktree. Never discard anyone's changes.
 4. Move the card to **In Progress** and comment the branch name.
 5. Make the change directly, without per-task subagents. If it makes a big, long-lived decision, add the `docs/decisions.md` entry in the same branch.
-6. Run the repo's verify command (see `README.md`) before every commit and before opening the PR.
+6. Run the repo's verify command (see `README.md`) before every commit and before opening the PR. The work is done when the PR's "done when" is met, verify passes, and the card and docs are up to date; verify passing alone isn't enough.
 7. Dispatch one reviewer subagent on the branch diff, via Superpowers `requesting-code-review`. Fix Critical and Important findings; add the rest to `TODO.md`.
 8. Push and open the PR with `gh pr create`. The description says what changes, why, and what must be true when it's done, and links the card.
 9. Post the final report on the card (format in "The card") and move it to **In Review**.
 
 If the change outgrows the light path (the approach becomes open), stop and comment `Path: full` on the card, then switch to the full path on the same card:
 
-- Keep the light branch local: don't push it, and close its PR if one is open. Don't delete it.
+- Keep the light branch local: don't push it, and close its PR if one is open. Don't delete it. Comment on the card: `Light branch <name> kept local; superseded by the plan`.
 - Write the spec and plan on a fresh `plan/<topic>` branch from `origin/main`, with documentation only, and open the plan PR.
 - After it's merged, create a fresh implementation branch from `origin/main` and carry over only the light-branch changes that fit the approved plan. Then delete the light branch.
 
@@ -77,8 +77,8 @@ When asked to execute a plan:
 
 1. `git fetch origin`. Execute the plan and spec **as they are on `origin/main`**. If the plan isn't there, it isn't approved: say so and stop. Local or unmerged changes to either document are not approved; don't execute them.
 2. Find the card: use the work's card if it's already known; otherwise search `SCRUM` with JQL `project = SCRUM AND text ~ "\"<plan path>\""`. If there is none, create it (see "The card") and tell the user its key. Update its description to the format in "The card" (spec and plan links, `Approved commit:`), replacing a bare `Plan:` line.
-3. If the card shows an implementation branch, an open PR or someone already working on it, stop and ask whether to resume or coordinate. If the user asked to resume this card's work, use its existing branch and skip step 4.
-4. Create a branch `<type>/SCRUM-<n>-<short-slug>` from `origin/main`, where `<type>` is the spec's `Type:` line. If the spec has no `Type:` line, stop and ask. If the current checkout has unrelated uncommitted work, use a separate worktree. Never discard or overwrite anyone's changes.
+3. If the card shows an implementation branch, an open PR or someone already working on it, stop and ask whether to resume or coordinate. A light branch the card marks as superseded by the plan doesn't count. If the user asked to resume this card's work, use its existing branch and skip step 4.
+4. Create a branch `<type>/SCRUM-<n>-<short-slug>` from `origin/main`, where `<type>` is the spec's `Type:` line. If the spec has no `Type:` line, stop and ask. If the current checkout has unrelated uncommitted work, use a separate worktree. Never discard or overwrite anyone's changes. If the card switched from the light path, carry over the kept light branch's changes as "The light path" says.
 5. Move the card to **In Progress** and comment the branch name.
 6. Execute the plan with Superpowers (`subagent-driven-development`). After each plan task, comment on the card: `Task <i>/<n> done — <task title>` and the commit short SHA.
 7. Run the repo's verify command (see `README.md`) before every commit and before opening the PR. The work is done when every goal in the spec is met, verify passes, and the card and docs are up to date; verify passing alone isn't enough.
@@ -89,7 +89,7 @@ Never approve or merge a PR. Move a card to **Done** only after a human has merg
 
 ### When the work changes the plan
 
-Make implementation choices within the approved scope, and list them as rulings in the final report. If a discovery materially changes scope, acceptance criteria, architecture or a recorded decision, stop the affected work, comment on the card, and open an updated spec and plan as a plan PR, on a fresh `plan/<topic>` branch and linked to the same card. Once it's merged, merge `origin/main` into the implementation branch, update the card's description with the new approved commit, and resume.
+Make implementation choices within the approved scope, and list them as rulings in the final report. If a discovery materially changes scope, acceptance criteria, architecture or a recorded decision, stop the affected work, comment on the card, and open an updated spec and plan as a plan PR, on a fresh `plan/<topic>` branch and linked to the same card. Once it's merged, merge `origin/main` into the implementation branch, refresh the card's `Spec:`, `Plan:` and `Approved commit:` lines to the new approved commit, and resume.
 
 ### When review asks for changes
 
@@ -102,7 +102,7 @@ If a required skill, connector, permission or the verify command is unavailable 
 ### Keeping the board in sync
 
 - **Cards for agreed work.** When the user agrees to a piece of work that has no card, search `SCRUM` first so the same work doesn't get two cards. If none exists, create a **To Do** card (see "The card"): assignee, summary and a short description ending `No plan yet`. The summary is the agreed work's name. Tell the user its key.
-- **Plan PR (full path).** When opening a plan PR, use the work's card if it's already known (from earlier in the session, a path change or a revised plan), keeping its links and history. Otherwise search `SCRUM` for it: assigned to the user, description ending `No plan yet`, matching summary (or ask the user). If none exists, create it as in "Cards for agreed work". Replace a trailing `No plan yet` or `Path: light — no plan` with `Plan: <plan path>`, and comment the plan PR link on the card.
+- **Plan PR (full path).** When opening a plan PR, use the work's card if it's already known (from earlier in the session, a path change or a revised plan), keeping its links and history. Otherwise search `SCRUM` for it: assigned to the user, description ending `No plan yet` or `Path: light — no plan`, matching summary (or ask the user). If none exists, create it as in "Cards for agreed work". Replace a trailing `No plan yet` or `Path: light — no plan` with `Plan: <plan path>`, and comment the plan PR link on the card.
 - **Done when merged.** At the start of each session's work in this repo, and whenever asked, search the user's own cards in **In Review**: `project = SCRUM AND status = "In Review" AND assignee = currentUser()`. Take the PR link from the card's latest final report `PR:` line. Skip cards whose PR belongs to another repository than this one (`gh repo view --json nameWithOwner`). Check the PR with `gh pr view <link> --json state`. If merged, move the card to **Done** and comment `PR merged — moved to Done`. If closed without merging, leave the card and tell the user. If still open, leave it. If a card has no `PR:` line, leave it and tell the user.
 
 ### The card

@@ -37,3 +37,8 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   Its trigger and "The flow" already scope it; append "(full path)" next time the section is edited.
 - [x] **#17 — Switching light to full leaves `Path: light — no plan` on the card** (`CLAUDE.md`, "The light path" and "Keeping the board in sync")
   The plan-PR lookup matches `No plan yet`, so a later session might not find the card. Restore `No plan yet` (or name the card key) when switching.
+- [ ] **SCRUM-15/1 — After a light-to-full switch the card stays In Progress** (`CLAUDE.md`, "The light path")
+  On the full path a card waits in To Do until execution; say whether to move it back while the plan PR is in review.
+- [ ] **SCRUM-15/2 — Switching to full doesn't say what to do with a pushed light branch** (`CLAUDE.md`, "The light path")
+  If its PR was open, the branch is on the remote; say whether to leave or delete it.
+- [ ] **SCRUM-15/3 — Resuming on the light path comments the branch name again** (`CLAUDE.md`, "The light path" step 4)

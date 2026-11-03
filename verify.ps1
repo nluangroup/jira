@@ -61,7 +61,7 @@ function Test-Todo {
                 "${file}:$lineNo heading '$line' must be '## <Category> — YYYY-MM-DD' with Category one of Critical, High Priority, Medium Priority, Low Priority, Architecture"
             }
         } elseif ($line -match '^[-*+] \[[ xX]\]') {
-            if ($line -cmatch '^- \[[ x]\] \*\*SCRUM-(\d+)/(\d+) — .+\*\*') {
+            if ($line -cmatch '^- \[[ x]\] \*\*SCRUM-([1-9]\d*)/([1-9]\d*) — .+\*\*') {
                 $card = [int]$Matches[1]
                 $k = [int]$Matches[2]
                 $want = if ($expectedPerCard.ContainsKey($card)) { $expectedPerCard[$card] } else { 1 }
@@ -69,7 +69,8 @@ function Test-Todo {
                 $expectedPerCard[$card] = $k + 1
             } elseif ($line -cmatch '^- \[[ x]\] \*\*#(\d+) — .+\*\*') {
                 $n = [int]$Matches[1]
-                if ($n -ne $expected) { "${file}:$lineNo found #$n, expected #$expected" }
+                if ($n -gt 17) { "${file}:$lineNo found #$n; #N numbers stop at #17, new items use SCRUM-<n>/<k>" }
+                elseif ($n -ne $expected) { "${file}:$lineNo found #$n, expected #$expected" }
                 $expected = $n + 1
             } else {
                 "${file}:$lineNo item '$line' must match '- [ ] **SCRUM-<n>/<k> — <text>**' or a legacy '- [ ] **#N — <text>**' (items use '- [ ]' or '- [x]')"
