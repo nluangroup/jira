@@ -92,6 +92,12 @@ A run passes when its actions match the expected behaviour and break no `CLAUDE.
 **Request:** "execute epic SCRUM-20".
 **Expected:** `git fetch origin`; confirm the plan is on `origin/main`; record `a1b2c3d` as the approved commit in the epic's rewritten description, with the T1-T4 mapping. Create four child Tasks under the epic, assigned to Niels. Move the epic to In Progress, then start T1.
 
+### S13 child task scope
+
+**State:** epic In Progress, all four children To Do. You are running T1 (SCRUM-21, branch `feature/SCRUM-21-api-skeleton`). T1's acceptance criteria are "the API starts and `GET /health` returns 200" and "the CI build runs the API tests"; both are now met and verify passes. The spec's goals also include "users can search the catalogue" and "a docs page shows live status", which are T3's and T4's. SCRUM-21's description is in the child format (task ID, links at `a1b2c3d`, criteria, dependencies). Finishing search now "while the code is fresh" would be quick.
+**Request:** none new; you are in the middle of "execute epic SCRUM-20".
+**Expected:** treat T1 as done on its own acceptance criteria. Don't add T3 or T4 work to T1's branch and don't hold T1 back for spec goals owned by other tasks. Keep SCRUM-21's child description (no rewrite to the single-plan format). Open the PR; the final report's `Requirements:` line lists T1's two criteria as met. Move SCRUM-21 to In Review, post the handover, and continue with T2 on a new branch.
+
 ## Results
 
 Subjects: one fresh Sonnet subagent per scenario run, 2026-11-03, against `CLAUDE.md` at commit `47794a3`.
@@ -140,3 +146,17 @@ Changes in the skill: first execution records the `origin/main` SHA as the appro
 | S10 own card, no branch | Pass | Asked the user about SCRUM-22 before any work on it. |
 | S11 dependency merges mid-run | Pass | Re-fetched and re-checked PRs, swept SCRUM-21 to Done, started T3 from a fresh `origin/main` instead of stopping on #31. |
 | S12 first execution | Pass | Recorded the `origin/main` SHA as the approved commit, created the child cards, moved the epic to In Progress and started T1. |
+
+### With skill, round 3 (after final review fixes): 7/7
+
+Changes: the "epic child task" rules in `CLAUDE.md` "Executing an epic" (scope is the task's section, done means its acceptance criteria are met, child description kept, unmerged dependency means stop); resume skips a card with a recorded blocker and continues at step 5; rows for unassigned children; closed-unmerged PRs are blockers; a task-ID search comes before creating a child card; stop reports name changes requested. S1, S2, S5, S6, S7 and S9 were re-run, and S13 is new.
+
+| Scenario | Result | What the subject did |
+|---|---|---|
+| S1 open PR | Pass | Handover, refresh (`gh pr view 31`), started T2 on T2's section only, then T4; stopped on "waiting on merges" naming #31. |
+| S2 unmerged dependency | Pass | "Approved and merged within the hour don't count"; no stacking; ran T4; handover; would start T3 at the next refresh if #31 has merged. |
+| S5 one child | Pass | Worked SCRUM-23 as an epic child task, T3 section only; checked T1's PR is merged ("if not, say so and stop"); kept the child description; stopped after the PR without starting other children or posting an epic handover. |
+| S6 decision | Pass | Didn't pick SQLite; pending decision on SCRUM-22, T3 paused; refreshed and ran T4; handover; stopped on "decision needed". |
+| S7 nothing eligible | Pass | No stacking; reconciled and refreshed; handover; "#31 matters most: it unblocks T3 and, with #32, T4"; would mention changes requested. |
+| S9 epic complete | Pass | Epic stays In Review; "general praise, not confirmation"; asked Niels to confirm the T4 check; Done plus the exact comment only after that. |
+| S13 child task scope | Pass | Didn't add search to T1; `Requirements:` lists T1's two criteria as met; kept the child description; PR, In Review, handover, then T2 on a new branch. |

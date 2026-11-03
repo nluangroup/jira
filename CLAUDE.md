@@ -59,7 +59,7 @@ There are two paths (see "Choosing a path"). The steps below are the full path; 
 - On the full path, work is a **task** or an **epic**. A task is one bounded change delivered in one implementation PR, however many steps it takes. An epic is several tasks contributing to one outcome, each with its own acceptance criteria and possibly dependencies. Epics are always full path.
 - If the work already belongs to a Jira epic, use that grouping. Otherwise propose an epic only when delivery needs several separately reviewable PRs; many steps alone never make an epic, and a complex single task can take the full path without being an epic.
 - When the work is agreed, make one proposal covering both choices (path, and task or epic for full work), for example "I recommend the full path, organised as an epic", and let the user confirm once. Record it on the card as a comment, exactly `Path: light`, `Path: full` or `Path: full — epic`. When unsure, ask.
-- Belonging to an epic doesn't widen a request. "Fix SCRUM-23" works on that one child task under the normal rules; only an explicit "execute epic SCRUM-X" or "resume epic SCRUM-X" authorises working through the epic's plan.
+- Belonging to an epic doesn't widen a request. "Fix SCRUM-23" works on that one child task, as an epic child task ("Executing an epic"); only an explicit "execute epic SCRUM-X" or "resume epic SCRUM-X" authorises working through the epic's plan.
 
 ### The light path
 
@@ -86,7 +86,7 @@ Never approve or merge a PR; move the card to **Done** only after a human has me
 When asked to execute a plan:
 
 1. `git fetch origin`. Execute the plan and spec **as they are on `origin/main`**. If the plan isn't there, it isn't approved: say so and stop. Local or unmerged changes to either document are not approved; don't execute them.
-2. Find the card: use the work's card if it's already known; otherwise search `SCRUM` with JQL `project = SCRUM AND text ~ "\"<plan path>\""`. If there is none, create it (see "The card") and tell the user its key. Update its description to the format in "The card" (spec and plan links, `Approved commit:`), replacing a bare `Plan:` line.
+2. Find the card: use the work's card if it's already known; otherwise search `SCRUM` with JQL `project = SCRUM AND text ~ "\"<plan path>\""`. If there is none, create it (see "The card") and tell the user its key. If the card is an Epic or says `Path: full — epic`, use "Executing an epic" instead. Update its description to the format in "The card" (spec and plan links, `Approved commit:`), replacing a bare `Plan:` line.
 3. If the card shows an implementation branch, an open PR or someone already working on it, stop and ask whether to resume or coordinate. A light branch the card marks as superseded by the plan doesn't count. If the user asked to resume this card's work, use its existing branch and skip step 4.
 4. Create a branch `<type>/SCRUM-<n>-<short-slug>` from `origin/main`, where `<type>` is the spec's `Type:` line. If the spec has no `Type:` line, stop and ask. If the current checkout has unrelated uncommitted work, use a separate worktree. Never discard or overwrite anyone's changes. If the card switched from the light path, carry over the kept light branch's changes as "The light path" says.
 5. Move the card to **In Progress** and comment the branch name.
@@ -110,9 +110,17 @@ When asked to execute or resume an epic ("execute epic SCRUM-X", "resume epic SC
 
 The skill is required. If it's unavailable, stop and report the blocker (see "When something is missing or fails"); don't fall back to "Executing a plan".
 
+An epic child task, whether run by the skill or asked for on its own ("Fix SCRUM-23"), follows "Executing a plan (full path)" with these differences:
+
+- "the plan" is that task's section of the epic plan; `subagent-driven-development` gets only that section;
+- the card is the child card; step 2 keeps its child description (see "The card") and doesn't rewrite it to the single-plan format;
+- if any of the task's dependency PRs isn't merged into `origin/main`, say so and stop;
+- progress comments name the task ID: `T2 done — <task title>` and the short SHA;
+- the work is done when the task's acceptance criteria are met (not every spec goal), verify passes and the card is up to date; the final report's `Requirements:` line lists those criteria, each met or not.
+
 ### When the work changes the plan
 
-Make implementation choices within the approved scope, and list them as rulings in the final report. If a discovery materially changes scope, acceptance criteria, architecture or a recorded decision, stop the affected work, comment on the card, and open an updated spec and plan as a plan PR, on a fresh `plan/<topic>` branch and linked to the same card. Once it's merged, merge `origin/main` into the implementation branch, refresh the card's `Spec:`, `Plan:` and `Approved commit:` lines to the new approved commit, and resume.
+Make implementation choices within the approved scope, and list them as rulings in the final report. If a discovery materially changes scope, acceptance criteria, architecture or a recorded decision, stop the affected work, comment on the card, and open an updated spec and plan as a plan PR, on a fresh `plan/<topic>` branch and linked to the same card. Once it's merged, merge `origin/main` into the implementation branch, refresh the card's `Spec:`, `Plan:` and `Approved commit:` lines to the new approved commit, and resume. For an epic, those lines are on the epic; also refresh the affected children's spec and plan links to the new commit and create child cards for tasks the amendment adds.
 
 ### When review asks for changes
 
@@ -138,7 +146,7 @@ If a required skill, connector, permission or the verify command is unavailable 
   - The epic card's description holds the spec and plan links, `Approved commit:`, the mapping from plan task IDs to child card keys, and the human checks still outstanding.
   - Child cards are issue type Task, created under the epic the first time it is executed, one per plan task, and assigned to the person executing the epic (unlike other cards, where the assignee is who is doing the work, this is what lets the Done sweep find them). Reuse existing child cards; never duplicate. A child's description holds its plan task ID, the spec and plan links at the approved commit, its acceptance criteria, any human checks, and its dependencies (task IDs and card keys). Its branch and PR go in comments.
   - Epic status: To Do until first execution, **In Progress** while tasks are worked, **In Review** when implementation is ready, **Done** when the epic is complete.
-  - A child moves to **Done** when its PR merges, and its human checks move to the epic's outstanding list. The epic moves to **Done** only when every child is Done and the user has confirmed those checks in the conversation; then comment on the epic exactly `Human checks confirmed by <name>, <date>`. Never assume the confirmation.
+  - A child moves to **Done** when its PR merges, and its human checks move to the epic's outstanding list. The epic moves to **Done** only when every child is Done and the user has confirmed those checks in the conversation; then comment on the epic exactly `Human checks confirmed by <name>, <date>`. Never assume the confirmation. If no human checks are outstanding, the epic moves to **Done** when every child is Done, without that comment.
 - Light-path description: a 2-3 sentence summary of the agreed work, then `Path: light — no plan`.
 - Full-path description (`<repo>` from `gh repo view --json nameWithOwner`; `<sha>` is the `origin/main` commit that was executed):
 

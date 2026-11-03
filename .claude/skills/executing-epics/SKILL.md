@@ -11,7 +11,7 @@ Work through an approved epic plan one task at a time (one child card, branch an
 
 ## When not to use
 
-A request about one child card ("fix SCRUM-23") is not epic execution ("Choosing a path"). Work that card alone under "Executing a plan (full path)", then stop; don't start other children. You may mention that "resume epic SCRUM-X" would continue the rest.
+A request about one child card ("fix SCRUM-23") is not epic execution ("Choosing a path"). Work that card alone as an epic child task ("Executing an epic"), then stop; don't start other children. You may mention that "resume epic SCRUM-X" would continue the rest.
 
 ## Procedure
 
@@ -21,18 +21,21 @@ A request about one child card ("fix SCRUM-23") is not epic execution ("Choosing
    - Plan not on `origin/main`: stop, it isn't approved.
 2. **Reconcile** Jira with reality:
    - Read the epic and every child; check every recorded PR with `gh pr view`; run the Done sweep ("Keeping the board in sync") for merged children and move their human checks to the epic's outstanding list.
-   - First execution: rewrite the epic's description with the approved commit, create the child cards ("The card") and move the epic to **In Progress**. An epic in **In Review** with work to do again goes back to **In Progress**.
-   - Mismatches (plan = scope, Jira = progress, GitHub = PR state): plan task without a card → create it, never a duplicate; card without a plan task → leave it, tell the user; criteria edited away from the plan → the plan wins, tell the user; card status vs PR → fix the card from the PR.
+   - First execution: rewrite the epic's description with the approved commit, create the child cards ("The card") and move the epic to **In Progress**.
+   - An epic in **In Review** with work to do again goes back to **In Progress**.
+   - Before creating a child card for a plan task, search the epic's children for that task ID; never create a duplicate.
+   - Mismatches (plan = scope, Jira = progress, GitHub = PR state): plan task without a card → create it; card without a plan task → leave it, tell the user; criteria edited away from the plan → the plan wins, tell the user; card status vs PR → fix the card from the PR; PR closed without merging → a blocker on that card, tell the user.
 3. **Resume this execution's own work first:**
 
    | Child card | Whose | Do |
    |---|---|---|
-   | In Progress, assigned to the current user, branch recorded | Yours: not "someone else working on it" | Resume on that branch without asking |
+   | In Progress, assigned to the current user, branch recorded, no unresolved blocker or pending decision on the card | Yours: not "someone else working on it" | Resume without asking: continue at step 5 on that branch (no new branch), then step 6 |
+   | Same, but the card records an unresolved blocker or pending decision | Yours, blocked | Leave it; go to step 4 |
    | In Progress, assigned to someone else | Theirs | Skip; don't reassign or touch their branch; tell the user |
-   | In Progress, assigned to the current user, no branch recorded | Unclear | Ask the user |
+   | In Progress, assigned to the current user with no branch recorded, or unassigned | Unclear | Ask the user |
 
 4. **Refresh, then pick.** `git fetch origin` and re-check every recorded PR with `gh pr view`, running the Done sweep for any that merged. Then pick the first eligible task in plan order (see "Eligibility"). If none is eligible, see "Stop conditions".
-5. **Run it** per "Executing a plan (full path)" steps 4-9, on branch `<task type>/SCRUM-<child>-<slug>` from the latest `origin/main`. The progress comment names the plan task ID: `T2 done — <task title>` and the short SHA.
+5. **Run it** as an epic child task ("Executing an epic"): "Executing a plan (full path)" steps 4-9 on branch `<task type>/SCRUM-<child>-<slug>` from the latest `origin/main`, scoped to that task's section and acceptance criteria.
 6. **Post the handover** on the epic (see "Handover").
 7. **Go back to step 4 without asking.** An open PR is a progress update, not a reason to stop or check in.
 
@@ -63,6 +66,8 @@ Stop when step 4 finds nothing eligible: post the handover and tell the user whi
 - **Decision needed** that blocks all remaining work.
 - **Blocker stops all progress:** missing access, an unavailable tool, or a verify failure shared by all remaining tasks.
 - **Implementation ready:** every task is merged or In Review. Move the epic to **In Review** and list the outstanding human checks.
+
+In every stop report, also name children whose PRs have changes requested.
 
 The epic moves to Done only by the rule in "The card". General praise ("looks good") doesn't confirm a human check: list the checks and ask.
 
