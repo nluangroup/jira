@@ -2,6 +2,12 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — Claude keeps the board in sync, including Done after a merge
+
+**What:** Claude creates a To Do card when work is agreed, links the plan PR to it, and moves a card to Done once a human has merged its PR. This replaces "Claude never moves a card to Done".
+**Why:** The board should reflect the work without manual dragging; the human gate is the merge, and Done only mirrors it.
+**Links:** [spec](superpowers/specs/2026-11-03-jira-sync-design.md), card SCRUM-13
+
 ## 2026-11-02 — No PowerShell test framework; verify.ps1 has no automated tests of its own
 
 **What:** Pester is dropped. `verify.ps1` needs only PowerShell 7 and git; its checks are exercised by hand against throwaway fixtures while it is built. This replaces "runs the Pester tests" in the entry below.
