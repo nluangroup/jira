@@ -2,6 +2,18 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — Epics: approve once, one PR per task, Claude continues past open PRs
+
+**What:** Work needing several separately reviewable PRs becomes an epic: one plan PR approves all its tasks, each task gets a child card and a PR, and the `executing-epics` skill works through eligible tasks without asking per task. Dependent tasks wait for real merges (no stacked branches); shared files are ordered in the plan. Claude pulls the user back in only when nothing more can move without a human.
+**Why:** Humans keep the gates that matter (plan approval, material decisions, merges) without acting as a dispatcher between tasks.
+**Links:** [spec](superpowers/specs/2026-11-03-executing-epics-design.md), card SCRUM-16
+
+## 2026-11-03 — Path and epic are separate choices, proposed together
+
+**What:** When work is agreed, Claude proposes light or full and, for full work, task or epic, in one proposal the user confirms once. An existing Jira epic is used as the grouping; otherwise an epic is proposed only when several reviewable PRs are needed. Belonging to an epic doesn't widen a request about one task.
+**Why:** Many steps don't make an epic, and a complex task can need the full path without one; one confirmation keeps it light.
+**Links:** [spec](superpowers/specs/2026-11-03-executing-epics-design.md), card SCRUM-16
+
 ## 2026-11-03 — TODO.md items get card-scoped IDs
 
 **What:** New `TODO.md` items are numbered `SCRUM-<n>/<k>`, counting from 1 per card; `verify.ps1` checks them. Items `#1`–`#17` keep their numbers.
