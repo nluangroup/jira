@@ -87,6 +87,10 @@ When asked to execute a plan:
 
 Never approve or merge a PR. Move a card to **Done** only after a human has merged its PR. Never push to `main`.
 
+### Executing an epic
+
+When asked to execute or resume an epic, use the `executing-epics` skill. Its execution procedure remains subject to this file's approval, verification and merge rules.
+
 ### When the work changes the plan
 
 Make implementation choices within the approved scope, and list them as rulings in the final report. If a discovery materially changes scope, acceptance criteria, architecture or a recorded decision, stop the affected work, comment on the card, and open an updated spec and plan as a plan PR, on a fresh `plan/<topic>` branch and linked to the same card. Once it's merged, merge `origin/main` into the implementation branch, refresh the card's `Spec:`, `Plan:` and `Approved commit:` lines to the new approved commit, and resume.
