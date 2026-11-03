@@ -1,48 +1,58 @@
 #!/usr/bin/env pwsh
-# Prints the "Effort:" line for a card's final report: Claude's elapsed time and the tokens
+# Prints the "Effort:" line for a card's final report: wall-clock time since -Since and the tokens
 # recorded in this repo's local Claude Code transcripts between -Since and -Until.
 # Counts every session and subagent for this repo on this machine in that window.
 param(
     [Parameter(Mandatory)][datetimeoffset]$Since,
     [datetimeoffset]$Until = [datetimeoffset]::Now,
-    [string]$ProjectDir
+    [string[]]$ProjectDir
 )
 
 $ErrorActionPreference = 'Stop'
 $inv = [System.Globalization.CultureInfo]::InvariantCulture
+if ($Until -lt $Since) { throw "-Until ($Until) is before -Since ($Since)" }
 
 if (-not $ProjectDir) {
     $configDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $HOME '.claude' }
-    # Worktrees share the main checkout's sessions, so key on the main checkout's path.
-    $repoRoot = Split-Path -Parent (git rev-parse --path-format=absolute --git-common-dir)
-    $ProjectDir = Join-Path $configDir 'projects' ($repoRoot -replace '[^A-Za-z0-9]', '-')
+    # Transcripts are stored under the directory a session started in: the main checkout or a worktree.
+    $roots = @(
+        (Split-Path -Parent (git rev-parse --path-format=absolute --git-common-dir)),
+        (git rev-parse --show-toplevel)
+    ) | ForEach-Object { [System.IO.Path]::GetFullPath($_) } | Select-Object -Unique
+    $ProjectDir = $roots | ForEach-Object { Join-Path $configDir 'projects' ($_ -replace '[^A-Za-z0-9]', '-') }
 }
-if (-not (Test-Path $ProjectDir)) { throw "No Claude Code transcripts at $ProjectDir" }
+$ProjectDir = @($ProjectDir | Where-Object { Test-Path $_ })
+if (-not $ProjectDir) { throw 'No Claude Code transcripts found for this repo' }
 
 function Get-Usage([System.IO.FileInfo]$file) {
-    $sum = [ordered]@{ In = [long]0; Cached = [long]0; Out = [long]0; Messages = 0 }
-    $seen = [System.Collections.Generic.HashSet[string]]::new()
+    # Streaming can write one message over several lines; keep the largest usage seen per message id.
+    $byId = @{}
     foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
         if (-not $line.Contains('"usage"')) { continue }
-        $entry = $line | ConvertFrom-Json -Depth 64 -DateKind String
+        # A transcript being written can end in a partial line.
+        try { $entry = $line | ConvertFrom-Json -Depth 64 -DateKind String } catch { continue }
         $message = $entry.message
-        if (-not $message.usage -or -not $entry.timestamp) { continue }
-        # Streaming writes one message over several lines; count each message id once.
-        if (-not $seen.Add([string]$message.id)) { continue }
+        if ($message -isnot [psobject] -or -not $message.usage -or -not $entry.timestamp) { continue }
         $at = [datetimeoffset]::Parse($entry.timestamp, $inv)
         if ($at -lt $Since -or $at -gt $Until) { continue }
         $u = $message.usage
-        $sum.In += [long]$u.input_tokens + [long]$u.cache_creation_input_tokens
-        $sum.Cached += [long]$u.cache_read_input_tokens
-        $sum.Out += [long]$u.output_tokens
-        $sum.Messages++
+        $tokens = @{
+            In     = [long]$u.input_tokens + [long]$u.cache_creation_input_tokens
+            Cached = [long]$u.cache_read_input_tokens
+            Out    = [long]$u.output_tokens
+        }
+        $id = [string]$message.id
+        if (-not $byId.ContainsKey($id) -or $byId[$id].Out -lt $tokens.Out) { $byId[$id] = $tokens }
     }
+    $sum = [ordered]@{ In = [long]0; Cached = [long]0; Out = [long]0; Messages = $byId.Count }
+    foreach ($t in $byId.Values) { $sum.In += $t.In; $sum.Cached += $t.Cached; $sum.Out += $t.Out }
     $sum
 }
 
 function Format-Tokens([long]$n) {
-    if ($n -ge 1000000) { return ($n / 1000000).ToString('0.0', $inv) + 'M' }
-    if ($n -ge 1000) { return ($n / 1000).ToString('0', $inv) + 'k' }
+    if ($n -ge 999500) { return ($n / 1000000).ToString('0.0', $inv) + 'M' }
+    if ($n -ge 10000) { return ($n / 1000).ToString('0', $inv) + 'k' }
+    if ($n -ge 1000) { return ($n / 1000).ToString('0.0', $inv) + 'k' }
     "$n"
 }
 
@@ -50,9 +60,10 @@ function Format-Part([string]$label, $u) {
     "$label $(Format-Tokens $u.In) in / $(Format-Tokens $u.Out) out (+$(Format-Tokens $u.Cached) cache reads)"
 }
 
+# A file last written before -Since holds no messages in the window.
 $recent = { $_.LastWriteTime -ge $Since.LocalDateTime }
-$mainFiles = Get-ChildItem -Path $ProjectDir -Filter '*.jsonl' -File | Where-Object $recent
-$subFiles = Get-ChildItem -Path $ProjectDir -Directory |
+$mainFiles = $ProjectDir | ForEach-Object { Get-ChildItem -Path $_ -Filter '*.jsonl' -File } | Where-Object $recent
+$subFiles = $ProjectDir | ForEach-Object { Get-ChildItem -Path $_ -Directory } |
     ForEach-Object { Join-Path $_.FullName 'subagents' } |
     Where-Object { Test-Path $_ } |
     ForEach-Object { Get-ChildItem -Path $_ -Filter '*.jsonl' -File } |
@@ -74,4 +85,4 @@ foreach ($f in $subFiles) {
 
 $elapsed = $Until - $Since
 $time = '{0}h {1}m' -f [math]::Floor($elapsed.TotalHours), $elapsed.Minutes
-"Effort: Claude $time (In Progress to In Review); tokens: $(Format-Part 'main' $main), $(Format-Part "subagents ($subCount)" $subs)"
+"Effort: $time elapsed since In Progress; tokens: $(Format-Part 'main' $main), $(Format-Part "subagents ($subCount)" $subs)"
