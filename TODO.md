@@ -27,3 +27,11 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
 ## Low Priority — 2026-11-03
 - [ ] **#12 — Card summary rule differs for early cards** (`CLAUDE.md`, "Keeping the board in sync" and "The card")
   A card created when work is agreed uses the work's name; "The card" says the summary is the plan title, and "Find the card" doesn't update the summary.
+- [ ] **#13 — Templates assume a plan** (`CLAUDE.md`, "The card" final report and "decisions.md entries")
+  "Done: <one line per plan task>" and `[spec](...)` don't fit light-path changes; say what to use instead (one line per change, link the PR).
+- [ ] **#14 — Branch table says "approved … plan" for every row** (`CLAUDE.md`, "Branches")
+  The bullet below clarifies it; the table could read "approved plan or agreed light change".
+- [ ] **#15 — README still describes only the plan-PR flow** (`README.md`, "How we work")
+  The diagram and "Each approved plan gets a Jira card" predate the light path.
+- [ ] **#16 — "Executing a plan" heading isn't labelled full path** (`CLAUDE.md`)
+  Its trigger and "The flow" already scope it; append "(full path)" next time the section is edited.
