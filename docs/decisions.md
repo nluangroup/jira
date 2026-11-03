@@ -6,7 +6,7 @@ Big, long-lived decisions a teammate needs months later. One entry per decision,
 
 **What:** Every final report ends with an `Effort:` line (Claude's elapsed time and tokens, main session and subagents) from `scripts/claude-usage.ps1`, which reads the local Claude Code transcripts. Claude never logs time as a Jira worklog.
 **Why:** The team wants to see what each card cost in Claude time and tokens; worklogs are booked as the signed-in person and would mix Claude's time into theirs.
-**Links:** card SCRUM-24
+**Links:** card SCRUM-24, [PR #20](https://github.com/nluangroup/jira/pull/20)
 
 ## 2026-11-03 — The demo app is lunch registration on the team's stack, in this repo
 
