@@ -69,12 +69,12 @@ Five tasks (the plan defines their acceptance criteria and file ordering):
 | T1 | Solution skeleton: API and test project, Angular app, SQLite, the employee list endpoint and identity header handling, the "Who are you?" picker, `verify.ps1` and CI for both stacks, coding standards in `CLAUDE.md` | — |
 | T2 | API: employees, lunch days and monthly beverages for the current employee, with the rules and tests | T1 |
 | T3 | Web: month calendar with tickable days | T1 |
-| T4 | Web: beverage spinner and month totals | T2, T3 |
-| T5 | Manager overview: API totals and CSV export, web page | T2, T3 |
+| T4 | Web: beverage spinner and month totals | T3 |
+| T5 | Manager overview: API totals and CSV export, web page | T1 |
 
-After T1 merges, T2 and T3 can run side by side; T4 and T5 wait for both. The plan must keep T4 and T5 from touching the same web files, or order them.
+After T1 merges, T2, T3 and T5 can run side by side; T4 waits for T3, whose month page it extends. The plan must keep T4 and T5 from touching the same web files, or order them. (Amended 2026-11-03: dependencies cut to the real ones, so an unattended run gets further; see `docs/decisions.md`.)
 
-Human checks: the presenter looks at the calendar and spinner in a browser (T3, T4) and opens an exported CSV in Excel (T5).
+Human checks: the presenter looks at the calendar and spinner in a browser (once T2, T3 and T4 are merged) and opens an exported CSV in Excel (once T2, T3 and T5 are merged).
 
 ## Decided by the owner
 
@@ -96,7 +96,7 @@ Human checks: the presenter looks at the calendar and spinner in a browser (T3, 
 - "Today" is Europe/Copenhagen, from an injectable clock in the API. Beverages can't be set for months after the current one.
 - CSV for Danish-locale Excel: UTF-8 with BOM, semicolons, formula-injection escaping.
 - ESLint via angular-eslint; Node 24 in CI.
-- The task split and dependencies above.
+- The task split and dependencies above (dependencies amended by the owner on 2026-11-03).
 
 ## Left to the builder
 
