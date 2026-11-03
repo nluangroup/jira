@@ -52,15 +52,15 @@ There are two paths (see "Choosing a path"). The steps below are the full path; 
 
 ### The light path
 
-1. Find or create the card (as in "Keeping the board in sync"), move it to **In Progress** and comment the branch name.
-2. Create `<type>/SCRUM-<n>-<short-slug>` from `origin/main`; `<type>` is agreed with the path.
+1. Find or create the card (as in "Keeping the board in sync"). Comment `Path: light` if it isn't there yet, and replace a trailing `No plan yet` in the description with `Path: light — no plan`, so the plan-PR lookup never picks up a light card. Move it to **In Progress** and comment the branch name.
+2. `git fetch origin`, then create `<type>/SCRUM-<n>-<short-slug>` from `origin/main`; `<type>` is agreed with the path. Steps 3-4 of "Executing a plan" apply: stop and ask if the card shows a branch, open PR or someone already working on it; use a separate worktree for unrelated uncommitted work; never discard anyone's changes.
 3. Make the change directly, without per-task subagents. If it makes a big, long-lived decision, add the `docs/decisions.md` entry in the same branch.
-4. Run the repo's verify command before every commit.
-5. Dispatch one reviewer subagent on the branch diff. Fix Critical and Important findings; append the rest to `TODO.md`.
+4. Run the repo's verify command (see `README.md`) before every commit and before opening the PR.
+5. Dispatch one reviewer subagent on the branch diff, via Superpowers `requesting-code-review`. Fix Critical and Important findings; append the rest to `TODO.md`.
 6. Push and open the PR with `gh pr create`. The description says what changes and why, and links the card.
 7. Post the final report on the card (format in "The card"; `Rulings` may be "none") and move it to **In Review**.
 
-If the change grows beyond light (the approach becomes open, or it spans several parts of the code), stop, comment on the card, and switch to the full path: write a spec and plan and open a plan PR.
+If the change grows beyond light (the approach becomes open, or it spans several parts of the code), stop, comment `Path: full` on the card, and switch to the full path: write a spec and plan and open a plan PR. Don't push or open a PR for the light branch until the plan PR is merged (close its PR if one is open).
 
 Never approve or merge a PR; move the card to **Done** only after a human has merged it.
 
