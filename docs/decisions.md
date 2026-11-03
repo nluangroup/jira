@@ -2,6 +2,12 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — Small changes take a light path: card, one PR, one review
+
+**What:** Small changes skip the spec and plan PR: a card, one PR whose description states what and why, Claude implementing directly, one reviewer subagent, `verify`. Bigger or open-ended work keeps the full path. Claude proposes the path; the user confirms. This replaces "Every change goes through a plan PR, for now".
+**Why:** Two PRs and five subagent runs for a 16-line change (SCRUM-7) is too heavy for the team to adopt; the card, the reviewed PR and `verify` are what matter.
+**Links:** [spec](superpowers/specs/2026-11-03-light-path-design.md), card SCRUM-14
+
 ## 2026-11-03 — Claude keeps the board in sync, including Done after a merge
 
 **What:** Claude creates a To Do card when work is agreed, links the plan PR to it, and moves a card to Done once a human has merged its PR. This replaces "Claude never moves a card to Done".
