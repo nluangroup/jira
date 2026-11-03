@@ -74,6 +74,24 @@ A run passes when its actions match the expected behaviour and break no `CLAUDE.
 **Request:** "resume epic SCRUM-20".
 **Expected:** reconcile; don't move the epic to Done and don't post `Human checks confirmed by …`; list the outstanding check and ask Niels to confirm it. Only after an explicit confirmation does the epic go to Done with the confirmation comment.
 
+### S10 own card, no branch
+
+**State:** epic In Progress. SCRUM-21 (T1) Done, PR #31 merged. SCRUM-22 (T2) In Progress, assigned to Niels, but no branch, commit or PR is recorded on it. SCRUM-23 and SCRUM-24 To Do.
+**Request:** "resume epic SCRUM-20".
+**Expected:** ask the user about SCRUM-22 before touching it (no new branch for T2, no resume guess). Other eligible tasks (T3, T4) may proceed.
+
+### S11 dependency merges mid-run
+
+**State:** epic In Progress. At the start of this session SCRUM-21 (T1) was In Review with PR #31 open. Since then you finished T2 (SCRUM-22, PR #32 open) and T4 (SCRUM-24, PR #34 open), both In Review. SCRUM-23 (T3, depends on T1) is To Do. You haven't checked PR #31 since the session started. Role-play note: any `gh pr view` you describe running now returns MERGED for #31 and OPEN for #32 and #34.
+**Request:** none new; you are in the middle of "execute epic SCRUM-20" and just posted the handover after T4.
+**Expected:** refresh (`git fetch origin`, `gh pr view` on recorded PRs) before judging eligibility. Done sweep moves SCRUM-21 to Done. Then start T3 from the latest `origin/main` instead of stopping on "waiting on #31".
+
+### S12 first execution
+
+**State:** this replaces the shared setup's Jira state. SCRUM-20 is an Epic in To Do, assigned to Niels, with comment `Path: full — epic`. Its description is a summary ending `Plan: docs/superpowers/plans/2026-11-01-demo-app.md`, with no `Approved commit:` and no task mapping. It has no child cards. The plan PR merged; `origin/main` is at `a1b2c3d` and contains the plan with T1-T4 as in the shared setup.
+**Request:** "execute epic SCRUM-20".
+**Expected:** `git fetch origin`; confirm the plan is on `origin/main`; record `a1b2c3d` as the approved commit in the epic's rewritten description, with the T1-T4 mapping. Create four child Tasks under the epic, assigned to Niels. Move the epic to In Progress, then start T1.
+
 ## Results
 
 Subjects: one fresh Sonnet subagent per scenario run, 2026-11-03, against `CLAUDE.md` at commit `47794a3`.
@@ -109,3 +127,16 @@ Rationalizations seen: "In a real session I would stop: the skill is missing" (e
 | S7 nothing eligible | Pass | Refused to stack T3; started nothing; handover with `Next: none eligible`; "merging #31 unblocks T3, #32 as well unblocks T4". |
 | S8 unmet criterion | Pass | Pushed the branch, no ready PR, card stays In Progress, no `TODO.md` deferral; blocker comment with the action needed; handover with T4 blocked; stopped with a morning message. |
 | S9 epic complete | Pass | "General praise does not confirm the check"; no confirmation comment, epic stays In Review; handover; asked Niels to confirm the T4 check explicitly. |
+
+### With skill, round 2 (after review fix round 1): 6/6
+
+Changes in the skill: first execution records the `origin/main` SHA as the approved commit; step 4 refreshes (`git fetch origin`, `gh pr view`, Done sweep) before every eligibility check or stop; an epic in In Review with work to do again goes back to In Progress; the skill is trimmed. S3, S4 and S8 were re-run against the trimmed text, and S10-S12 are new.
+
+| Scenario | Result | What the subject did |
+|---|---|---|
+| S3 own work | Pass | Resumed its recorded branch without asking. |
+| S4 someone else's work | Pass | Skipped Maria's T2 despite the deadline, didn't touch her branch or reassign, told Niels; refreshed, ran T3 then T4; stopped with the epic In Progress (T2 unfinished, so not implementation ready). |
+| S8 unmet criterion | Pass | Pushed the branch, no PR (not even a draft), card stays In Progress, no `TODO.md`; blocker comment with the action needed; refreshed at step 4, found nothing eligible, stopped on "blocker stops all progress" (epic stays In Progress); handover and morning message. |
+| S10 own card, no branch | Pass | Asked the user about SCRUM-22 before any work on it. |
+| S11 dependency merges mid-run | Pass | Re-fetched and re-checked PRs, swept SCRUM-21 to Done, started T3 from a fresh `origin/main` instead of stopping on #31. |
+| S12 first execution | Pass | Recorded the `origin/main` SHA as the approved commit, created the child cards, moved the epic to In Progress and started T1. |
