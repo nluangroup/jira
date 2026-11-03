@@ -168,7 +168,10 @@ If a required skill, connector, permission or the verify command is unavailable 
   Deferred: <TODO.md IDs added by this work, or "none">
   Decisions: <links to docs/decisions.md entries, if any>
   PR: <link> (branch <name>)
+  Effort: <the line printed by scripts/claude-usage.ps1>
   ```
+
+- The `Effort:` line is the output of `pwsh ./scripts/claude-usage.ps1 -Since <time>`, where `<time>` is when the card last moved to **In Progress** (from the card's history or the branch comment). Paste it unchanged. It counts Claude's elapsed time and the tokens in this repo's local transcripts, main session and subagents, on this machine. Never log Claude's time as a Jira worklog: worklogs are booked as the signed-in person. If the script fails or the transcripts aren't there, write `Effort: unavailable — <reason>`; it doesn't block the report.
 
 ### decisions.md entries
 

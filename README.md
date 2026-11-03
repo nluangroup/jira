@@ -37,6 +37,7 @@ That's the full path, for features and open-ended work. Small, agreed fixes and 
 | `docs/decisions.md` | Big, long-lived decisions |
 | `docs/superpowers/specs/` | Specs from brainstorming |
 | `docs/superpowers/plans/` | Implementation plans |
+| `scripts/claude-usage.ps1` | Prints the `Effort:` line for a card's final report: Claude's time and tokens since a given time, from local Claude Code transcripts |
 
 ## Verify
 
