@@ -37,7 +37,7 @@ Order: T1; then T2 and T3 (independent of each other); then T4 and T5 (independe
 - Lunch days: no Saturdays or Sundays, no days after today. Beverages: whole number 0-999; no month after the current month.
 - CSV: UTF-8 with BOM, `;` separator, header row `Employee;Lunch days;Beverages`, a name starting with `=`, `+`, `-` or `@` is prefixed with `'`.
 - SQLite file `src/Lunch.Api/lunch.db`, git-ignored; schema created on start (`EnsureCreated`). Employees seeded from `appsettings.json` (`Employees` section: `Id`, `Name`, `IsOfficeManager`); at least four, one manager.
-- API listens on `http://localhost:5080`; the Angular dev server proxies `/api` there.
+- API listens on `http://localhost:5180`; the Angular dev server proxies `/api` there. (Changed from 5080 by the owner on 2026-11-03: Docker Desktop holds 5080 on the presenter's machine.)
 - Team standards in `CLAUDE.md` apply (T1 adds the C# and Angular ones).
 - `pwsh ./verify.ps1` passes after every task.
 

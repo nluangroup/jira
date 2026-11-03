@@ -64,7 +64,7 @@ CI runs the same script on every PR and on pushes to `main`, with .NET 10 and No
 The lunch registration demo is an ASP.NET Core API (`src/Lunch.Api`) and an Angular app (`web/`). You need the .NET 10 SDK and Node 24.
 
 ```
-dotnet run --project src/Lunch.Api     # http://localhost:5080
+dotnet run --project src/Lunch.Api     # http://localhost:5180
 cd web && npm ci && npm start          # http://localhost:4200, proxies /api to the API
 ```
 
