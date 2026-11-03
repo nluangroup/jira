@@ -36,6 +36,11 @@ There are two paths (see "Choosing a path"). The steps below are the full path; 
   - any verification that needs a human, per task;
   - file ordering: when two tasks touch the same files, which goes first (the second depends on the first).
 - Each epic task is small enough for one reviewable PR.
+- Keep epic dependencies to the ones that are real, so an epic started at the end of the day keeps delivering PRs while nobody is there to merge:
+  - A task depends on another only when it needs that task's merged code, or edits a file that task creates or owns. Needing data or behaviour the other task will provide isn't enough: tasks build against contracts the plan fixes (routes, payloads, interfaces) and test against stubs or seeded data.
+  - Put shared files, entities and registration points in an early skeleton task, so later tasks depend on it rather than on each other.
+  - Adding one registration line to a skeleton-owned file (for example a `Map…Endpoints()` call in `Program.cs`) doesn't create a dependency. If that leaves a PR in conflict after another merges, the card's owner merges `origin/main` into the branch and resolves it, as in "When review asks for changes".
+  - A human check that needs several tasks merged names them; it waits on the epic's outstanding list, not on the tasks' dependencies.
 
 ### Branches
 
