@@ -2,6 +2,12 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — Claude's effort goes in the final report, not in Jira worklogs
+
+**What:** Every final report ends with an `Effort:` line (Claude's elapsed time and tokens, main session and subagents) from `scripts/claude-usage.ps1`, which reads the local Claude Code transcripts. Claude never logs time as a Jira worklog.
+**Why:** The team wants to see what each card cost in Claude time and tokens; worklogs are booked as the signed-in person and would mix Claude's time into theirs.
+**Links:** card SCRUM-24, [PR #20](https://github.com/nluangroup/jira/pull/20)
+
 ## 2026-11-03 — The demo app is lunch registration on the team's stack, in this repo
 
 **What:** An ASP.NET Core API (`src/`, SQLite via EF Core, xUnit) and an Angular app (`web/`, Vitest) live in this repo; `verify.ps1` and CI check both. Employees tick office lunches on a month calendar and count beverages per month; the office manager sees and exports monthly totals.

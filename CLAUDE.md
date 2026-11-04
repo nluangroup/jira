@@ -128,7 +128,7 @@ The person who owns the card resumes the work on the same branch. Move the card 
 
 ### When something is missing or fails
 
-If a required skill, connector, permission or the verify command is unavailable or fails, stop and report the blocker. Don't substitute another tool, skip the step or claim the work is done. A verify failure counts as failing whether this work caused it or it was already there; say which.
+If a required skill, connector, permission or the verify command is unavailable or fails, stop and report the blocker. Don't substitute another tool, skip the step or claim the work is done. A verify failure counts as failing whether this work caused it or it was already there; say which. Exception: a failing usage script doesn't block the final report (see "The card").
 
 ### Keeping the board in sync
 
@@ -168,7 +168,10 @@ If a required skill, connector, permission or the verify command is unavailable 
   Deferred: <TODO.md IDs added by this work, or "none">
   Decisions: <links to docs/decisions.md entries, if any>
   PR: <link> (branch <name>)
+  Effort: <the line printed by scripts/claude-usage.ps1>
   ```
+
+- The `Effort:` line is the output of `pwsh ./scripts/claude-usage.ps1 -Since <time>`, where `<time>` is when the card last moved to **In Progress** (from the card's history or the branch comment). Paste it unchanged. The time is wall-clock time since then, including any waiting; the tokens are everything in this repo's local transcripts in that window, main session and subagents, on this machine, so other work in the repo at the same time is included. Never log Claude's time as a Jira worklog: worklogs are booked as the signed-in person. If the script fails or the transcripts aren't there, write `Effort: unavailable — <reason>` (an exception to "When something is missing or fails").
 
 ### decisions.md entries
 
