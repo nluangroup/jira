@@ -22,12 +22,12 @@
 | T1 | Solution skeleton and demo identity | feature | — |
 | T2 | My-month API | feature | T1 |
 | T3 | Month calendar | feature | T1 |
-| T4 | Beverage spinner and month totals | feature | T2, T3 |
-| T5 | Manager overview and CSV export | feature | T2, T3 |
+| T4 | Beverage spinner and month totals | feature | T3 |
+| T5 | Manager overview and CSV export | feature | T1 |
 
-Order: T1; then T2 and T3 (independent of each other); then T4 and T5 (independent of each other).
+Order: T1; then T2, T3 and T5 (independent of each other); then T4 once T3 is merged. (Amended 2026-11-03 by the owner, SCRUM-9: dependencies cut to the real ones, so an unattended run after T1 merges delivers T2, T3 and T5.)
 
-**File ordering:** T1 creates every shared file (solution, `Program.cs` endpoint registration hooks, `LunchDbContext` with all entities, `app.routes.ts` with all routes, the nav, the API client base). After T1, each task owns its own files (see Layout); a task that must edit a file owned by another task depends on it. T2 and T5 both register endpoints in `Program.cs`, so T5 depends on T2 (already listed). T4 edits T3's month page, so T4 depends on T3 (already listed). T4 and T5 share no files.
+**File ordering:** T1 creates every shared file (solution, `Program.cs` endpoint registration hooks, `LunchDbContext` with all entities, `app.routes.ts` with all routes, the nav, the API client base). After T1, each task owns its own files (see Layout); a task that must edit a file owned by another task depends on it. Exception: T2 and T5 each add one `Map…Endpoints()` line to `Program.cs` (T1's); that doesn't make a dependency, and if the second PR conflicts after the first merges, its owner (or Claude when resuming the epic) merges `origin/main`, resolves it, runs verify and pushes. T5 reads `LunchDay` and `MonthBeverages` through T1's `LunchDbContext`, not through T2's code. T4 edits T3's month page, so T4 depends on T3. T4 and T5 share no files.
 
 ## Global Constraints
 
@@ -122,7 +122,7 @@ All routes under `/api`. Errors use `ProblemDetails`. Ids are short lowercase st
 
 ### T4: Beverage spinner and month totals
 
-**Type:** feature · **Depends on:** T2, T3 · **Human check:** the presenter runs the API and the web app and checks, as two different people, that ticking days and setting beverages work, persist after an API restart, and that each person sees only their own month.
+**Type:** feature · **Depends on:** T3 · **Human check** (once T2 and T4 are merged): the presenter runs the API and the web app and checks, as two different people, that ticking days and setting beverages work, persist after an API restart, and that each person sees only their own month.
 
 **Acceptance criteria:**
 - A beverage spinner component in `web/src/app/beverages/`, shown on the month page: whole numbers 0-999, saving through `PUT /api/me/months/{month}/beverages`, disabled for future months, with a validation message for out-of-range input.
@@ -135,13 +135,13 @@ All routes under `/api`. Errors use `ProblemDetails`. Ids are short lowercase st
 
 ### T5: Manager overview and CSV export
 
-**Type:** feature · **Depends on:** T2, T3 · **Human check:** the presenter downloads a CSV for a month with data and opens it in Excel (Danish locale): three columns, Danish letters intact, numbers as numbers.
+**Type:** feature · **Depends on:** T1 · **Human check** (once T2, T3 and T5 are merged, so there is data to register): the presenter downloads a CSV for a month with data and opens it in Excel (Danish locale): three columns, Danish letters intact, numbers as numbers.
 
 **Acceptance criteria:**
 - `GET /api/reports/{month}` and `/csv` per the API contract: one row per employee (including those with no registrations, as zeros), sorted by name, plus the total; 403 for non-managers.
 - CSV format per Global Constraints, including the BOM, `;`, header row and formula escaping.
 - The `report` route (shown in the nav only for managers) has a month picker, the table with a total row, and an "Export CSV" button; a non-manager reaching it sees a "managers only" message.
-- API tests in `ReportTests`; Vitest tests stub the API.
+- API tests in `ReportTests` seed `LunchDay` and `MonthBeverages` rows directly through `LunchDbContext`; Vitest tests stub the API.
 
 - [ ] **Step 1:** Write `ReportTests`: `Report_counts_per_employee_and_total`; `Employee_without_registrations_is_zero_row`; `Non_manager_is_403`; `Csv_has_bom_semicolons_and_header`; `Csv_escapes_formula_names` (seed a name starting with `=`); `Malformed_month_is_400`. Run → fail.
 - [ ] **Step 2:** Implement `src/Lunch.Api/Reports/`, registered from `Program.cs`. Run `dotnet test` → pass.

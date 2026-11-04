@@ -2,6 +2,12 @@
 
 Big, long-lived decisions a teammate needs months later. One entry per decision, newest first. Added while writing the spec, reviewed in the plan PR.
 
+## 2026-11-03 — Claude's effort goes in the final report, not in Jira worklogs
+
+**What:** Every final report ends with an `Effort:` line (Claude's elapsed time and tokens, main session and subagents) from `scripts/claude-usage.ps1`, which reads the local Claude Code transcripts. Claude never logs time as a Jira worklog.
+**Why:** The team wants to see what each card cost in Claude time and tokens; worklogs are booked as the signed-in person and would mix Claude's time into theirs.
+**Links:** card SCRUM-24, [PR #20](https://github.com/nluangroup/jira/pull/20)
+
 ## 2026-11-03 — Epic plans keep only real dependencies, so epics can run unattended
 
 **What:** An epic task depends on another only when it needs that task's merged code or edits a file it owns; tasks build against contracts fixed in the plan, and shared files live in a skeleton task. A one-line registration in a skeleton-owned file doesn't create a dependency. Stacked branches and Claude merging stay out.
