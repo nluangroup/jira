@@ -50,3 +50,11 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   One task blocked while the rest wait on merges; S8 shows it copes, but the stop report could name both reasons explicitly.
 - [ ] **SCRUM-16/2 — Retyping to Epic assumes the work's card already exists** (`CLAUDE.md`, "Keeping the board in sync")
   "Cards for agreed work" normally creates it first; say so in the Epics bullet.
+- [ ] **SCRUM-18/1 — `/api/employees/` (trailing slash) returns 401** (`src/Lunch.Api/Identity/`)
+  The identity exemption matches the exact path only.
+- [ ] **SCRUM-18/2 — Changed employee names or manager flags never reach an existing `lunch.db`** (`src/Lunch.Api/Data/EmployeeSeeder.cs`)
+  The seeder only inserts missing ids; update on start, or note it in the README.
+- [ ] **SCRUM-18/3 — The stored employee object can hold a stale manager flag** (`web/src/app/identity/`)
+  Refresh it from `/api/me` on start.
+- [ ] **SCRUM-18/4 — The interceptor adds `X-Employee-Id` to every request, not only `/api`** (`web/src/app/identity/`)
+- [ ] **SCRUM-18/5 — No foreign key from lunch days and beverages to employees** (`src/Lunch.Api/Data/LunchDbContext.cs`)

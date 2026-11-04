@@ -151,12 +151,59 @@ function Test-Plans {
     }
 }
 
+function Invoke-Step([string]$WorkDir, [string]$Command, [string[]]$Arguments) {
+    Push-Location (Join-Path $Root $WorkDir)
+    try {
+        $output = @(& $Command @Arguments 2>&1 | ForEach-Object { "$_" })
+        if ($LASTEXITCODE) {
+            "$Command $($Arguments -join ' ') failed (exit $LASTEXITCODE) in $WorkDir"
+            $output | Select-Object -Last 15 | ForEach-Object { "  $_" }
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+function Test-ApiBuild {
+    Invoke-Step '.' 'dotnet' @('build', 'Lunch.slnx', '--nologo', '-warnaserror')
+}
+
+function Test-ApiTest {
+    Invoke-Step '.' 'dotnet' @('test', 'Lunch.slnx', '--nologo')
+}
+
+function Install-WebPackages {
+    if (-not (Test-Path -LiteralPath (Join-Path $Root 'web/node_modules'))) {
+        Invoke-Step 'web' 'npm' @('ci')
+    }
+}
+
+function Test-WebLint {
+    Install-WebPackages
+    Invoke-Step 'web' 'npm' @('run', 'lint')
+}
+
+function Test-WebTest {
+    Install-WebPackages
+    Invoke-Step 'web' 'npm' @('test')
+}
+
+function Test-WebBuild {
+    Install-WebPackages
+    Invoke-Step 'web' 'npm' @('run', 'build')
+}
+
 $checks = [ordered]@{
     links = { Test-Links }
     todo = { Test-Todo }
     decisions = { Test-Decisions }
     specs = { Test-Specs }
     plans = { Test-Plans }
+    'api-build' = { Test-ApiBuild }
+    'api-test' = { Test-ApiTest }
+    'web-lint' = { Test-WebLint }
+    'web-test' = { Test-WebTest }
+    'web-build' = { Test-WebBuild }
 }
 
 $failed = $false
