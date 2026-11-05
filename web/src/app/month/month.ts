@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { Beverages } from '../beverages/beverages';
 import { MonthApi } from './month-api';
 
@@ -36,7 +36,9 @@ export class Month {
   readonly loadFailed = signal(false);
   readonly saveFailed = signal(false);
 
-  readonly beveragesDisabled = computed(() => this.month() > this.today.slice(0, 7));
+  readonly loaded = signal(false);
+  readonly beveragesDisabled = computed(() => !this.loaded() || this.month() > this.today.slice(0, 7));
+  private readonly spinner = viewChild(Beverages);
 
   readonly title = computed(() => {
     const [year, month] = this.month().split('-').map(Number);
@@ -101,7 +103,9 @@ export class Month {
         if (this.month() === requested) this.beverages.set(count);
       },
       error: () => {
-        if (this.month() === requested) this.saveFailed.set(true);
+        if (this.month() !== requested) return;
+        this.saveFailed.set(true);
+        this.spinner()?.reset(this.beverages());
       },
     });
   }
@@ -111,11 +115,15 @@ export class Month {
     this.loadFailed.set(false);
     this.saveFailed.set(false);
     this.lunchDays.set([]);
+    this.beverages.set(0);
+    this.loaded.set(false);
     this.api.get(requested).subscribe({
       next: (state) => {
         if (this.month() !== requested) return;
         this.lunchDays.set(state.lunchDays);
         this.beverages.set(state.beverages);
+        this.loaded.set(true);
+        this.spinner()?.reset(state.beverages);
       },
       error: () => {
         if (this.month() === requested) this.loadFailed.set(true);

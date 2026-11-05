@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
 
 const MAX = 999;
 
@@ -9,6 +9,7 @@ const MAX = 999;
     <label for="beverages-count">Beverages</label>
     <button type="button" aria-label="Fewer beverages" [disabled]="disabled()" (click)="step(-1)">&minus;</button>
     <input
+      #field
       id="beverages-count"
       type="number"
       min="0"
@@ -34,6 +35,13 @@ export class Beverages {
 
   readonly max = MAX;
   readonly invalid = signal(false);
+  private readonly field = viewChild.required<ElementRef<HTMLInputElement>>('field');
+
+  /** Shows `count` in the field and clears any validation message, e.g. after a failed save or a month change. */
+  reset(count: number): void {
+    this.invalid.set(false);
+    this.field().nativeElement.value = String(count);
+  }
 
   change(event: Event): void {
     const raw = (event.target as HTMLInputElement).value.trim();

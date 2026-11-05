@@ -194,6 +194,31 @@ describe('Month', () => {
     expect(totals(fixture)).toContain('Beverages 7');
   });
 
+  it('failed_beverage_save_restores_the_field', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    spinner(fixture).value = '12';
+    spinner(fixture).dispatchEvent(new Event('change'));
+    httpTesting.expectOne('/api/me/months/2026-11/beverages').flush(null, { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+
+    expect(spinner(fixture).value).toBe('7');
+    expect(totals(fixture)).toContain('Beverages 7');
+  });
+
+  it('beverages_disabled_and_reset_until_month_loads', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    root(fixture).querySelector<HTMLButtonElement>('button.nav')!.click();
+    await settle(fixture);
+    expect(spinner(fixture).disabled).toBe(true);
+    expect(totals(fixture)).toContain('Beverages 0');
+
+    httpTesting.expectOne('/api/me/months/2026-10').flush('boom', { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+    expect(spinner(fixture).disabled).toBe(true);
+  });
+
   it('disabled_for_future_month', async () => {
     const fixture = await load();
 
