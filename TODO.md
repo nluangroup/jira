@@ -72,3 +72,11 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   The code handles all three; only coverage is missing.
 - [ ] **SCRUM-20/4 — Day buttons are named only by the day number** (`web/src/app/month/month.html`)
   Add an `aria-label` with the full date for screen readers.
+- [ ] **SCRUM-22/1 — Report rows sort by character code, not Danish order** (`src/Lunch.Api/Reports/ReportEndpoints.cs:~84`)
+  Ordinal gives Å, Æ, Ø and puts accented and lowercase names after Z; Danish order is Æ, Ø, Å. Matches `/api/employees` today. A `da-DK` comparer needs ICU.
+- [ ] **SCRUM-22/2 — Report tests miss a 401 call and the first-of-month and December boundaries** (`tests/Lunch.Api.Tests/ReportTests.cs`)
+  The code is correct (half-open month range; 401 from the middleware); only coverage is missing.
+
+## High Priority — 2026-11-05
+- [ ] **SCRUM-22/3 — Intermittent "Test Class Cleanup Failure (MyMonthTests): NullReferenceException" fails verify** (`tests/Lunch.Api.Tests/MyMonthTests.cs`, `LunchApiFactory.cs`)
+  Seen 3 times in ~20 runs on 2026-11-05 (all 28 tests pass; the fixture's disposal throws, so `dotnet test` exits 1). Not reproduced in 80 further runs with logging added, so the cause is unconfirmed. Suspect: `MyMonthTests` creates a derived `WithWebHostBuilder` host per client, all sharing one in-memory SQLite connection and disposed with the class fixture. Fix candidate: one clock-overriding factory per class (see SCRUM-19/2).
