@@ -1,5 +1,6 @@
 using Lunch.Api.Data;
 using Lunch.Api.Identity;
+using Lunch.Api.MyMonth;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseMiddleware<CurrentEmployeeMiddleware>();
 app.MapIdentityEndpoints();
+app.MapMyMonthEndpoints();
 
 app.Run();
 
