@@ -1,7 +1,6 @@
 using Lunch.Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,7 +21,7 @@ public sealed class LunchApiFactory : WebApplicationFactory<Program>
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<DbContextOptions<LunchDbContext>>();
-            services.AddDbContext<LunchDbContext>(options => options.UseSqlite($"Data Source={databasePath}"));
+            services.AddDbContext<LunchDbContext>(options => options.UseSqlite($"Data Source={databasePath};Pooling=False"));
         });
 
     /// <inheritdoc />
@@ -31,7 +30,6 @@ public sealed class LunchApiFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
         if (disposing)
         {
-            SqliteConnection.ClearAllPools();
             File.Delete(databasePath);
         }
     }
