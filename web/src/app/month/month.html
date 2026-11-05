@@ -1,0 +1,33 @@
+<header class="bar">
+  <button type="button" class="nav" aria-label="Previous month" (click)="shift(-1)">&lt;</button>
+  <h1>{{ title() }}</h1>
+  <button type="button" class="nav" aria-label="Next month" (click)="shift(1)">&gt;</button>
+</header>
+
+@if (loadFailed()) {
+  <p role="alert">Could not load your month.</p>
+}
+@if (saveFailed()) {
+  <p role="alert">Could not save your change.</p>
+}
+
+<div class="grid">
+  @for (weekday of weekdays; track weekday) {
+    <span class="weekday">{{ weekday }}</span>
+  }
+  @for (blank of leadingBlanks(); track $index) {
+    <span class="blank"></span>
+  }
+  @for (cell of days(); track cell.date) {
+    <button
+      type="button"
+      class="day"
+      [attr.data-date]="cell.date"
+      [attr.aria-pressed]="isTicked(cell.date)"
+      [disabled]="cell.disabled"
+      (click)="toggle(cell.date)"
+    >
+      {{ cell.day }}
+    </button>
+  }
+</div>

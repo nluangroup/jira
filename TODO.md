@@ -64,8 +64,14 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   E.g. clock at 2026-11-03 23:30 UTC accepts 2026-11-04; `PUT /api/me/lunch-days/2026-11-31` is 400. The code handles both; only coverage is missing.
 - [ ] **SCRUM-19/2 — `MyMonthTests` builds a new host per client** (`tests/Lunch.Api.Tests/MyMonthTests.cs`)
   Each `ClientFor` goes through `WithWebHostBuilder`; one clock-overriding host per test class would be faster.
-
-## Low Priority — 2026-11-05
+- [ ] **SCRUM-20/1 — "Today" is computed once per calendar page** (`web/src/app/month/month.ts:~50`)
+  A page left open past Copenhagen midnight keeps the new day disabled until reload.
+- [ ] **SCRUM-20/2 — The grid stays clickable after a failed load** (`web/src/app/month/month.html`)
+  Ticked days show unticked after a load error; hide or disable the grid while `loadFailed()` is set.
+- [ ] **SCRUM-20/3 — Missing calendar tests: pending state, save error, Dec→Jan and Jan→Dec** (`web/src/app/month/month.spec.ts`)
+  The code handles all three; only coverage is missing.
+- [ ] **SCRUM-20/4 — Day buttons are named only by the day number** (`web/src/app/month/month.html`)
+  Add an `aria-label` with the full date for screen readers.
 - [ ] **SCRUM-22/1 — Report rows sort by character code, not Danish order** (`src/Lunch.Api/Reports/ReportEndpoints.cs:~84`)
   Ordinal gives Å, Æ, Ø and puts accented and lowercase names after Z; Danish order is Æ, Ø, Å. Matches `/api/employees` today. A `da-DK` comparer needs ICU.
 - [ ] **SCRUM-22/2 — Report tests miss a 401 call and the first-of-month and December boundaries** (`tests/Lunch.Api.Tests/ReportTests.cs`)

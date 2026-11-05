@@ -1,0 +1,30 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekday {
+  font-weight: bold;
+  text-align: center;
+}
+
+.day {
+  padding: 0.75rem 0;
+}
+
+.day[aria-pressed='true'] {
+  background: #2e7d32;
+  color: white;
+}
+
+.day:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
