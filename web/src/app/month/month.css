@@ -28,3 +28,14 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.totals {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 0.25rem 1rem;
+}
+
+.totals dd {
+  margin: 0;
+  font-weight: bold;
+}

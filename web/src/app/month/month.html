@@ -31,3 +31,12 @@
     </button>
   }
 </div>
+
+<dl class="totals">
+  <dt>Lunch days</dt>
+  <dd>{{ lunchDays().length }}</dd>
+  <dt>Beverages</dt>
+  <dd>{{ beverages() }}</dd>
+</dl>
+
+<app-beverages [value]="beverages()" [disabled]="beveragesDisabled()" (save)="saveBeverages($event)" />

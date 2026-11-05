@@ -23,4 +23,8 @@ export class MonthApi {
   untick(date: string): Observable<void> {
     return this.http.delete<void>(`/api/me/lunch-days/${date}`);
   }
+
+  setBeverages(month: string, count: number): Observable<void> {
+    return this.http.put<void>(`/api/me/months/${month}/beverages`, { count });
+  }
 }

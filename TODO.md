@@ -76,10 +76,14 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   Ordinal gives Å, Æ, Ø and puts accented and lowercase names after Z; Danish order is Æ, Ø, Å. Matches `/api/employees` today. A `da-DK` comparer needs ICU.
 - [ ] **SCRUM-22/2 — Report tests miss a 401 call and the first-of-month and December boundaries** (`tests/Lunch.Api.Tests/ReportTests.cs`)
   The code is correct (half-open month range; 401 from the middleware); only coverage is missing.
+- [ ] **SCRUM-25/1 — A killed test run can leave `lunch-tests-*.db` files in the temp folder** (`tests/Lunch.Api.Tests/LunchApiFactory.cs`)
+  `Dispose` deletes the database file; a run killed mid-write leaves it (and its `-journal`) behind. Harmless; only a leftover file.
+- [ ] **SCRUM-21/1 — Rapid beverage clicks lose increments and can show a different count than the server** (`web/src/app/beverages/beverages.ts:~step`)
+  `step()` counts from the last saved value, so three quick + clicks from 7 save 8; out-of-order responses decide the display. Count from the pending value, or serialise saves.
+- [ ] **SCRUM-21/2 — Spinner accessibility and test gaps** (`web/src/app/beverages/`)
+  No `aria-invalid`/`aria-describedby` on the input; no month-level test types an invalid value; `disabled_for_future_month` checks only the input, not −/+.
 
 ## High Priority — 2026-11-05
 - [ ] **SCRUM-22/3 — Intermittent "Test Class Cleanup Failure (MyMonthTests): NullReferenceException" fails verify** (`tests/Lunch.Api.Tests/MyMonthTests.cs`, `LunchApiFactory.cs`)
   Seen 3 times in ~20 runs on 2026-11-05 (all 28 tests pass; the fixture's disposal throws, so `dotnet test` exits 1). Not reproduced in 80 further runs with logging added, so the cause is unconfirmed. Suspect: `MyMonthTests` creates a derived `WithWebHostBuilder` host per client, all sharing one in-memory SQLite connection and disposed with the class fixture. Fix candidate: one clock-overriding factory per class (see SCRUM-19/2).
   SCRUM-25 removes the suspected cause (one SQLite connection shared by concurrent requests); 30 clean runs after it. Close this if it doesn't recur.
-- [ ] **SCRUM-25/1 — A killed test run can leave `lunch-tests-*.db` files in the temp folder** (`tests/Lunch.Api.Tests/LunchApiFactory.cs`)
-  `Dispose` deletes the database file; a run killed mid-write leaves it (and its `-journal`) behind. Harmless; only a leftover file.

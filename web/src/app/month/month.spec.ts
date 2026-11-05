@@ -145,4 +145,104 @@ describe('Month', () => {
 
     expect(root(fixture).querySelector('[role="alert"]')?.textContent).toContain('Could not load your month.');
   });
+
+  async function loadWithBeverages(beverages: number, lunchDays: string[] = []): Promise<ComponentFixture<Month>> {
+    const fixture = TestBed.createComponent(Month);
+    await settle(fixture);
+    httpTesting.expectOne('/api/me/months/2026-11').flush({ month: '2026-11', lunchDays, beverages });
+    await settle(fixture);
+    return fixture;
+  }
+
+  function spinner(fixture: ComponentFixture<Month>): HTMLInputElement {
+    return root(fixture).querySelector<HTMLInputElement>('app-beverages input')!;
+  }
+
+  function totals(fixture: ComponentFixture<Month>): string {
+    return Array.from(root(fixture).querySelectorAll('.totals > *')).map((e) => e.textContent!.trim()).join(' ');
+  }
+
+  it('shows_beverages_from_month', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    expect(spinner(fixture).value).toBe('7');
+    expect(spinner(fixture).disabled).toBe(false);
+  });
+
+  it('changing_value_saves', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    spinner(fixture).value = '12';
+    spinner(fixture).dispatchEvent(new Event('change'));
+    const request = httpTesting.expectOne({ method: 'PUT', url: '/api/me/months/2026-11/beverages' });
+    expect(request.request.body).toEqual({ count: 12 });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await settle(fixture);
+
+    expect(spinner(fixture).value).toBe('12');
+    expect(totals(fixture)).toContain('Beverages 12');
+  });
+
+  it('failed_beverage_save_shows_message_and_keeps_total', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    root(fixture).querySelector<HTMLButtonElement>('button[aria-label="More beverages"]')!.click();
+    httpTesting.expectOne('/api/me/months/2026-11/beverages').flush(null, { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+
+    expect(root(fixture).textContent).toContain('Could not save your change.');
+    expect(totals(fixture)).toContain('Beverages 7');
+  });
+
+  it('failed_beverage_save_restores_the_field', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    spinner(fixture).value = '12';
+    spinner(fixture).dispatchEvent(new Event('change'));
+    httpTesting.expectOne('/api/me/months/2026-11/beverages').flush(null, { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+
+    expect(spinner(fixture).value).toBe('7');
+    expect(totals(fixture)).toContain('Beverages 7');
+  });
+
+  it('beverages_disabled_and_reset_until_month_loads', async () => {
+    const fixture = await loadWithBeverages(7);
+
+    root(fixture).querySelector<HTMLButtonElement>('button.nav')!.click();
+    await settle(fixture);
+    expect(spinner(fixture).disabled).toBe(true);
+    expect(totals(fixture)).toContain('Beverages 0');
+
+    httpTesting.expectOne('/api/me/months/2026-10').flush('boom', { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+    expect(spinner(fixture).disabled).toBe(true);
+  });
+
+  it('disabled_for_future_month', async () => {
+    const fixture = await load();
+
+    root(fixture).querySelector<HTMLButtonElement>('button[aria-label="Next month"]')!.click();
+    httpTesting.expectOne('/api/me/months/2026-12').flush({ month: '2026-12', lunchDays: [], beverages: 0 });
+    await settle(fixture);
+
+    expect(spinner(fixture).disabled).toBe(true);
+  });
+
+  it('totals_follow_ticks_and_beverages', async () => {
+    const fixture = await loadWithBeverages(2, ['2026-11-02']);
+    expect(totals(fixture)).toBe('Lunch days 1 Beverages 2');
+
+    day(fixture, '2026-11-03').click();
+    httpTesting.expectOne({ method: 'PUT', url: '/api/me/lunch-days/2026-11-03' }).flush(null, { status: 204, statusText: 'No Content' });
+    await settle(fixture);
+    expect(totals(fixture)).toBe('Lunch days 2 Beverages 2');
+
+    day(fixture, '2026-11-02').click();
+    httpTesting.expectOne({ method: 'DELETE', url: '/api/me/lunch-days/2026-11-02' }).flush(null, { status: 204, statusText: 'No Content' });
+    root(fixture).querySelector<HTMLButtonElement>('button[aria-label="More beverages"]')!.click();
+    httpTesting.expectOne('/api/me/months/2026-11/beverages').flush(null, { status: 204, statusText: 'No Content' });
+    await settle(fixture);
+    expect(totals(fixture)).toBe('Lunch days 1 Beverages 3');
+  });
 });
