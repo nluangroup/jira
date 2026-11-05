@@ -58,3 +58,13 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   Refresh it from `/api/me` on start.
 - [ ] **SCRUM-18/4 — The interceptor adds `X-Employee-Id` to every request, not only `/api`** (`web/src/app/identity/`)
 - [ ] **SCRUM-18/5 — No foreign key from lunch days and beverages to employees** (`src/Lunch.Api/Data/LunchDbContext.cs`)
+
+## Low Priority — 2026-11-05
+- [ ] **SCRUM-20/1 — "Today" is computed once per calendar page** (`web/src/app/month/month.ts:~50`)
+  A page left open past Copenhagen midnight keeps the new day disabled until reload.
+- [ ] **SCRUM-20/2 — The grid stays clickable after a failed load** (`web/src/app/month/month.html`)
+  Ticked days show unticked after a load error; hide or disable the grid while `loadFailed()` is set.
+- [ ] **SCRUM-20/3 — Missing calendar tests: pending state, save error, Dec→Jan and Jan→Dec** (`web/src/app/month/month.spec.ts`)
+  The code handles all three; only coverage is missing.
+- [ ] **SCRUM-20/4 — Day buttons are named only by the day number** (`web/src/app/month/month.html`)
+  Add an `aria-label` with the full date for screen readers.

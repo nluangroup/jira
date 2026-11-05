@@ -71,13 +71,21 @@ export class Month {
   }
 
   toggle(date: string): void {
+    const requested = this.month();
     const ticked = this.isTicked(date);
     const call = ticked ? this.api.untick(date) : this.api.tick(date);
     this.saveFailed.set(false);
     call.subscribe({
-      next: () =>
-        this.lunchDays.update((days) => (ticked ? days.filter((d) => d !== date) : [...days, date])),
-      error: () => this.saveFailed.set(true),
+      next: () => {
+        if (this.month() !== requested) return;
+        this.lunchDays.update((days) => {
+          const without = days.filter((d) => d !== date);
+          return ticked ? without : [...without, date];
+        });
+      },
+      error: () => {
+        if (this.month() === requested) this.saveFailed.set(true);
+      },
     });
   }
 

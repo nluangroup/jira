@@ -71,6 +71,32 @@ describe('Month', () => {
     expect(day(fixture, '2026-11-03').getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('double_tick_before_response_counts_the_day_once', async () => {
+    const fixture = await load();
+
+    day(fixture, '2026-11-03').click();
+    day(fixture, '2026-11-03').click();
+    for (const request of httpTesting.match({ method: 'PUT', url: '/api/me/lunch-days/2026-11-03' })) {
+      request.flush(null, { status: 204, statusText: 'No Content' });
+    }
+    await settle(fixture);
+
+    expect(fixture.componentInstance.lunchDays()).toEqual(['2026-11-03']);
+  });
+
+  it('late_tick_response_after_navigating_is_ignored', async () => {
+    const fixture = await load();
+
+    day(fixture, '2026-11-03').click();
+    const put = httpTesting.expectOne({ method: 'PUT', url: '/api/me/lunch-days/2026-11-03' });
+    root(fixture).querySelector<HTMLButtonElement>('button.nav')!.click();
+    httpTesting.expectOne('/api/me/months/2026-10').flush({ month: '2026-10', lunchDays: [], beverages: 0 });
+    put.flush(null, { status: 204, statusText: 'No Content' });
+    await settle(fixture);
+
+    expect(fixture.componentInstance.lunchDays()).toEqual([]);
+  });
+
   it('untick_calls_delete', async () => {
     const fixture = await load(['2026-11-03']);
 
