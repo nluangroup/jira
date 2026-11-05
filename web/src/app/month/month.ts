@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Beverages } from '../beverages/beverages';
 import { MonthApi } from './month-api';
 
 const copenhagenDate = new Intl.DateTimeFormat('en-CA', {
@@ -19,6 +20,7 @@ interface DayCell {
 
 @Component({
   selector: 'app-month',
+  imports: [Beverages],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './month.html',
   styleUrl: './month.css',
@@ -33,6 +35,8 @@ export class Month {
   readonly beverages = signal(0);
   readonly loadFailed = signal(false);
   readonly saveFailed = signal(false);
+
+  readonly beveragesDisabled = computed(() => this.month() > this.today.slice(0, 7));
 
   readonly title = computed(() => {
     const [year, month] = this.month().split('-').map(Number);
@@ -82,6 +86,19 @@ export class Month {
           const without = days.filter((d) => d !== date);
           return ticked ? without : [...without, date];
         });
+      },
+      error: () => {
+        if (this.month() === requested) this.saveFailed.set(true);
+      },
+    });
+  }
+
+  saveBeverages(count: number): void {
+    const requested = this.month();
+    this.saveFailed.set(false);
+    this.api.setBeverages(requested, count).subscribe({
+      next: () => {
+        if (this.month() === requested) this.beverages.set(count);
       },
       error: () => {
         if (this.month() === requested) this.saveFailed.set(true);
