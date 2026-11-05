@@ -58,3 +58,9 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
   Refresh it from `/api/me` on start.
 - [ ] **SCRUM-18/4 — The interceptor adds `X-Employee-Id` to every request, not only `/api`** (`web/src/app/identity/`)
 - [ ] **SCRUM-18/5 — No foreign key from lunch days and beverages to employees** (`src/Lunch.Api/Data/LunchDbContext.cs`)
+
+## Low Priority — 2026-11-05
+- [ ] **SCRUM-19/1 — No tests for the Copenhagen midnight boundary or a malformed date** (`tests/Lunch.Api.Tests/MyMonthTests.cs`)
+  E.g. clock at 2026-11-03 23:30 UTC accepts 2026-11-04; `PUT /api/me/lunch-days/2026-11-31` is 400. The code handles both; only coverage is missing.
+- [ ] **SCRUM-19/2 — `MyMonthTests` builds a new host per client** (`tests/Lunch.Api.Tests/MyMonthTests.cs`)
+  Each `ClientFor` goes through `WithWebHostBuilder`; one clock-overriding host per test class would be faster.
