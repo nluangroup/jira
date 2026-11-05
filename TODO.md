@@ -74,3 +74,4 @@ Known follow-ups and review findings not yet fixed. Rules and format are in `CLA
 ## High Priority — 2026-11-05
 - [ ] **SCRUM-22/3 — Intermittent "Test Class Cleanup Failure (MyMonthTests): NullReferenceException" fails verify** (`tests/Lunch.Api.Tests/MyMonthTests.cs`, `LunchApiFactory.cs`)
   Seen 3 times in ~20 runs on 2026-11-05 (all 28 tests pass; the fixture's disposal throws, so `dotnet test` exits 1). Not reproduced in 80 further runs with logging added, so the cause is unconfirmed. Suspect: `MyMonthTests` creates a derived `WithWebHostBuilder` host per client, all sharing one in-memory SQLite connection and disposed with the class fixture. Fix candidate: one clock-overriding factory per class (see SCRUM-19/2).
+  SCRUM-25 removes the suspected cause (one SQLite connection shared by concurrent requests); 30 clean runs after it. Close this if it doesn't recur.
