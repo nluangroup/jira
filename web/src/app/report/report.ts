@@ -37,6 +37,9 @@ function currentMonth(): string {
         <input type="month" [value]="month()" (input)="month.set($any($event.target).value)" />
       </label>
       <button type="button" (click)="exportCsv()" [disabled]="!month()">Export CSV</button>
+      @if (exportFailed()) {
+        <p role="alert">Could not export the CSV.</p>
+      }
 
       @if (report.error()) {
         <p role="alert">Could not load the report.</p>
@@ -72,6 +75,7 @@ export class Report {
   private readonly http = inject(HttpClient);
   protected readonly isManager = inject(Identity).isManager;
   protected readonly month = signal(currentMonth());
+  protected readonly exportFailed = signal(false);
 
   protected readonly report = rxResource({
     params: computed(() => (this.isManager() && this.month() ? this.month() : undefined)),
@@ -80,13 +84,18 @@ export class Report {
 
   protected exportCsv(): void {
     const month = this.month();
-    this.http.get(`/api/reports/${month}/csv`, { responseType: 'blob' }).subscribe((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `lunch-${month}.csv`;
-      link.click();
-      URL.revokeObjectURL(url);
+    this.exportFailed.set(false);
+    this.http.get(`/api/reports/${month}/csv`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `lunch-${month}.csv`;
+        link.click();
+        // Some browsers cancel the download if the URL is revoked before it starts.
+        setTimeout(() => URL.revokeObjectURL(url));
+      },
+      error: () => this.exportFailed.set(true),
     });
   }
 }

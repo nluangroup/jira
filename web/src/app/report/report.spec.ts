@@ -82,7 +82,11 @@ describe('Report', () => {
   it('export_requests_csv', async () => {
     const createObjectURL = vi.fn().mockReturnValue('blob:csv');
     const revokeObjectURL = vi.fn();
-    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }));
+    const original = { createObjectURL: URL.createObjectURL, revokeObjectURL: URL.revokeObjectURL };
+    Object.assign(URL, { createObjectURL, revokeObjectURL });
+    onTestFinished(() => {
+      Object.assign(URL, original);
+    });
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     const fixture = setup(manager);
     const month = currentMonth();
@@ -97,8 +101,23 @@ describe('Report', () => {
 
     expect(createObjectURL).toHaveBeenCalled();
     expect(click).toHaveBeenCalled();
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:csv');
+    await vi.waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith('blob:csv'));
     click.mockRestore();
+  });
+
+  it('export_failure_shows_message', async () => {
+    const fixture = setup(manager);
+    const month = currentMonth();
+    httpTesting.expectOne(`/api/reports/${month}`).flush(report(month));
+    await fixture.whenStable();
+
+    (fixture.nativeElement as HTMLElement).querySelector('button')!.click();
+    httpTesting
+      .expectOne(`/api/reports/${month}/csv`)
+      .flush(new Blob(['boom']), { status: 500, statusText: 'Server Error' });
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Could not export the CSV.');
   });
 
   it('non_manager_sees_message', async () => {
