@@ -64,6 +64,18 @@ public sealed class MyMonthTests : IClassFixture<LunchApiFactory>
     }
 
     [Fact]
+    public async Task Concurrent_ticks_of_one_day_are_one_day()
+    {
+        var client = ClientFor("bjorn");
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => client.PutAsync("/api/me/lunch-days/2026-03-05", null)));
+        var month = await client.GetFromJsonAsync<MonthDto>("/api/me/months/2026-03");
+
+        Assert.All(responses, r => Assert.Equal(HttpStatusCode.NoContent, r.StatusCode));
+        Assert.Equal(["2026-03-05"], month!.LunchDays);
+    }
+
+    [Fact]
     public async Task Untick_removes_day()
     {
         var client = ClientFor("anna");

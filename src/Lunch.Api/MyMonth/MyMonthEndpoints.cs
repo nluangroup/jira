@@ -8,7 +8,6 @@ namespace Lunch.Api.MyMonth;
 /// <summary>Endpoints for the current employee's lunch days and beverages.</summary>
 public static class MyMonthEndpoints
 {
-    private const string MonthFormat = "yyyy-MM";
     private const string DateFormat = "yyyy-MM-dd";
     private const int MaxBeverages = 999;
     private static readonly TimeZoneInfo Copenhagen = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
@@ -67,13 +66,10 @@ public static class MyMonthEndpoints
             return BadRequest("Lunch cannot be registered for future days.");
         }
 
+        // An upsert, so two quick ticks of the same day can't race into a unique-index 500.
         var employeeId = context.GetCurrentEmployee().Id;
-        if (!await db.LunchDays.AnyAsync(d => d.EmployeeId == employeeId && d.Date == day, ct))
-        {
-            db.LunchDays.Add(new LunchDay { EmployeeId = employeeId, Date = day });
-            await db.SaveChangesAsync(ct);
-        }
-
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO LunchDays (EmployeeId, Date) VALUES ({employeeId}, {day}) ON CONFLICT (EmployeeId, Date) DO NOTHING", ct);
         return Results.NoContent();
     }
 
@@ -108,17 +104,8 @@ public static class MyMonthEndpoints
         }
 
         var employeeId = context.GetCurrentEmployee().Id;
-        var row = await db.MonthBeverages.SingleOrDefaultAsync(b => b.EmployeeId == employeeId && b.Month == month, ct);
-        if (row is null)
-        {
-            db.MonthBeverages.Add(new MonthBeverages { EmployeeId = employeeId, Month = month, Count = request.Count });
-        }
-        else
-        {
-            row.Count = request.Count;
-        }
-
-        await db.SaveChangesAsync(ct);
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO MonthBeverages (EmployeeId, Month, Count) VALUES ({employeeId}, {month}, {request.Count}) ON CONFLICT (EmployeeId, Month) DO UPDATE SET Count = excluded.Count", ct);
         return Results.NoContent();
     }
 
@@ -126,8 +113,7 @@ public static class MyMonthEndpoints
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(time.GetUtcNow(), Copenhagen).DateTime);
 
     private static bool TryParseMonth(string value, out DateOnly firstOfMonth) =>
-        DateOnly.TryParseExact($"{value}-01", DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out firstOfMonth)
-        && value.Length == MonthFormat.Length;
+        DateOnly.TryParseExact($"{value}-01", DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out firstOfMonth);
 
     private static bool TryParseDate(string value, out DateOnly date) =>
         DateOnly.TryParseExact(value, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
